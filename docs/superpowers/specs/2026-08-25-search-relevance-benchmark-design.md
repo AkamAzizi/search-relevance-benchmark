@@ -141,8 +141,10 @@ Output is enum members only. Off-vocabulary output is retried once, then recorde
 `content_hash`.
 
 **Accuracy:** a human hand-labels ~150 random products against the same taxonomy, blind to
-model output. Per-field agreement is published including fields that do badly. A field
-below acceptable agreement is not used as a hard filter.
+model output. Per-field agreement is published including fields that do badly.
+**Threshold fixed in advance: a field below 0.80 exact agreement is not used as a hard
+filter and is marked low-confidence in the writeup.** Setting the number before measuring
+is what makes it a test rather than a rationalisation.
 
 ### 6.3 Retrieval, fusion, reranking, truncation
 *Every choice here is picked for defensibility over sophistication (invariant 6).*
@@ -202,7 +204,10 @@ that returns 60 results for a query the catalog cannot serve.
 
 **Pooling:** union the top-10 from every system per query, deduplicate, strip provenance,
 shuffle with a seed derived from the query id. The labeler sees a flat list — no system, no
-rank.
+rank. Note that the ladder has seven rungs but only **six contribute unique documents**:
+`Hybrid+Rerank+Truncate` returns a prefix of `Hybrid+Rerank`'s results, so it can add
+nothing the pool does not already contain. It is still scored; it just cannot widen the
+pool.
 
 **Volume:** ~25-30 unique products per query across ~45 queries = **1,100-1,350
 judgements**, 2-3 hours. If reduced, reduce systems in the pool, not queries — query count
