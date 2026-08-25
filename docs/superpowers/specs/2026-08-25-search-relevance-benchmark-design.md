@@ -23,7 +23,8 @@ weaker, because its entire value is that its numbers can be trusted.
 
 1. A human produces the ground truth: queries, relevance judgements, enrichment accuracy sample.
 2. Judgements are blind and pooled across every system compared.
-3. The query set is committed with a timestamp before any tuning. Never edited after results are visible.
+3. The query set is committed with a timestamp before any tuning, split into development and
+   sealed test at commit time, and never edited after results are visible.
 4. Any automated proxy is calibrated against human labels, against a threshold fixed in advance.
 5. Known advantages are disclosed in the writeup, not discovered by the reader.
 6. The core reasoning — ranking, fusion, truncation, metrics — is defensible line by line by the submitter.
@@ -65,37 +66,64 @@ would have missed. English-language slot and Depict reference store remain unfil
 
 ## 5. Architecture: dataset-centric with a thin service
 
-Every stage emits a versioned artifact. Each search system is a pure function over
-artifacts. The evaluation reads artifacts and **never calls the running service** — so
-reproducing a number requires no infrastructure, and "I reran it and got something else"
-has one possible cause instead of many.
+Every stage emits a versioned artifact. The evaluation reads artifacts and **never calls a
+running service** — so reproducing a number requires no infrastructure, and "I reran it and
+got something else" has one possible cause instead of many.
+
+**The baseline is not a pure function, and this spec must not pretend otherwise.** Local
+systems are deterministic functions over the catalog snapshot. `NativeSearch` is a live
+remote black box whose internal index may hold newer, deleted, unavailable or
+differently-localised products. It is therefore handled as a **capture-and-replay
+adapter**: raw responses are captured once, as close to crawl time as possible, together
+with locale, market, currency, headers, cookies, endpoint parameters, timestamp, and the
+product/variant mapping used to resolve its results onto local ids. The harness replays
+those captured artifacts and never calls the storefront during evaluation. Overlap with the
+local snapshot is audited and reported, and the writeup states plainly that exact snapshot
+equality cannot be proven for a black-box baseline.
 
     catalog.parquet -> enriched.parquet -> index/ -> runs/{system}/{query}.json -> scorecard.md
 
 The deployed service loads the same artifacts to serve the live demo and to produce the
 latency measurements.
 
-### The spine
+### The public seam
 
-    class SearchSystem(Protocol):
-        name: str
-        def search(self, query: str, k: int) -> list[Hit]: ...
+`search(query, k)` is too small to carry the real contract — snapshot, locale,
+configuration, determinism, timeout behaviour, identity semantics and failure modes all
+stay implicit inside it. It survives as an *internal* seam that both local retrievers and
+the capture-replay adapter satisfy. What the evaluation module actually exposes is:
+
+    evaluate(run_spec: RunSpec,
+             catalog_snapshot: SnapshotRef,
+             query_set: QuerySetRef) -> RunArtifact
+
+    score(run_artifacts: list[RunArtifact],
+          qrels: Qrels) -> Scorecard
+
+`RunSpec` fully identifies the system and its configuration: model revisions, prompts,
+fusion and truncation parameters, index build, code version. A `RunArtifact` that cannot
+name what produced it has no business in a benchmark.
 
 ### The ablation ladder
 
 | System | Adds |
 |---|---|
-| `NativeSearch` | the baseline — the storefront's real search |
-| `BM25` | lexical only |
+| ★ `NativeSearch` | the baseline — the storefront's real search |
+| ★ `BM25` | lexical only |
 | `BM25+Compound` | lexical with Swedish compound splitting |
-| `Dense` | semantic only |
+| ★ `Dense` | semantic only |
 | `Hybrid` | RRF fusion |
-| `Hybrid+Rerank` | cross-encoder |
+| ★ `Hybrid+Rerank` | cross-encoder |
 | `Hybrid+Rerank+Truncate` | the cutoff |
 
-The ladder satisfies the requirement that the table include a configuration that performed
-*worse* — by construction rather than by search. `Dense` alone is expected to lose to
-`BM25` on exact brand and SKU queries.
+The ladder is an ablation, not a device for manufacturing a loser. Nothing here guarantees
+that `Dense` underperforms `BM25` on exact brand and SKU queries — that is a hypothesis the
+frozen experiment tests, and whatever it produces is what gets reported. A methodology that
+sounds as though it *needs* a losing configuration undercuts the honesty it was meant to
+demonstrate.
+
+★ marks the four systems that contribute documents to the judgement pool (see 6.4). The
+rest are scored but do not widen it.
 
 ## 6. Components
 
@@ -103,25 +131,36 @@ The ladder satisfies the requirement that the table include a configuration that
 *Claim: a pipeline that runs twice without duplicating or losing anything.*
 
 Shopify `products.json?limit=250&page=N`, paced 3s, every response cached by URL hash.
-State keyed on `product_id` with `content_hash`, `first_seen`, `last_seen`, `deleted_at`.
+State keyed on `product_id`, carrying `first_seen`, `last_seen`, `deleted_at`, and **two
+distinct hashes** rather than one:
+
+- `source_payload_hash` — the complete source record, price and inventory included. Drives
+  version history, so nothing the source sent is silently discarded.
+- `enrichment_input_hash` — search-relevant fields only (title, body, tags, vendor,
+  product_type, options, variant titles). Drives enrichment caching, so price churn does
+  not re-pay for enrichment.
+
+A single hash could not serve both purposes: excluding price kept enrichment cheap but
+threw away source history.
 
 | Run-2 outcome | Condition | Action |
 |---|---|---|
-| new | id unseen | insert |
-| changed | hash differs | new version row |
-| unchanged | hash matches | touch `last_seen` only |
+| new | id unseen | insert version, enqueue enrichment |
+| source-changed | `source_payload_hash` differs | new version row |
+| enrichment-stale | `enrichment_input_hash` differs | new version row, enqueue enrichment |
+| unchanged | both hashes match | touch `last_seen` only |
 | disappeared | absent now | soft-delete, never hard-delete |
 
-`content_hash` covers only search-relevant fields, so price/inventory churn does not
-trigger re-enrichment.
-
-**Acceptance test:** run ingest twice back-to-back; assert zero inserts, zero updates,
-zero duplicates.
+**Acceptance test:** run ingest twice back-to-back; assert **zero new product versions and
+zero enrichment jobs**. Asserting "zero database updates" was wrong — an unchanged record
+legitimately touches `last_seen`, so that assertion contradicted the very transition table
+it was meant to verify.
 
 **Pagination hazard:** page-based pagination is unstable under concurrent catalog edits.
-The public endpoint offers no `since_id`, so mitigate by detection — assert id uniqueness
-across pages and re-fetch page 1 at the end to confirm it is unchanged. On failure,
-discard and re-crawl. A crawl that cannot prove consistency must not become a benchmark.
+The public endpoint offers no `since_id`, so mitigate by detection: assert id uniqueness
+across pages, and **compare two consecutive complete crawl manifests**. Re-fetching page 1
+proves only that page 1 is stable; it says nothing about whether the crawl as a whole saw a
+consistent catalog. On mismatch, discard and re-crawl.
 
 **Imagery:** store URLs only. Never rehost.
 
@@ -138,13 +177,24 @@ in relevance judgements.
 
 Output is enum members only. Off-vocabulary output is retried once, then recorded as
 `null` with the raw response kept. Null is honest; a hallucinated enum is not. Cached by
-`content_hash`.
+`enrichment_input_hash`, so a price change never re-pays for enrichment.
 
-**Accuracy:** a human hand-labels ~150 random products against the same taxonomy, blind to
-model output. Per-field agreement is published including fields that do badly.
-**Threshold fixed in advance: a field below 0.80 exact agreement is not used as a hard
-filter and is marked low-confidence in the writeup.** Setting the number before measuring
-is what makes it a test rather than a rationalisation.
+**Accuracy:** a human hand-labels ~150 products against the same taxonomy, blind to model
+output. Sampling is **stratified by predicted value** wherever a field is imbalanced —
+uniform random sampling of an imbalanced field measures the head and says nothing about the
+tail.
+
+Exact agreement is the wrong gate on its own. A field can score 0.85 while every rare
+colour, material or category fails badly, and rare values are precisely what attribute
+queries ask for. So the published figures are **coverage, per-value precision and recall,
+and macro-F1** — macro, so a rare value counts as much as a common one.
+
+**Threshold fixed in advance: macro-F1 < 0.70 disqualifies a field.** Disqualification is
+total and enumerated: the field is excluded from hard filters, from facets, from BM25 field
+weighting, and from answer-layer grounding. The earlier version disqualified a field only
+as a "hard filter" while 6.3 kept feeding enriched category into BM25 and 6.5 kept building
+facets from the same enums — so the gate disabled nothing. Setting the number and the
+consequence before measuring is what makes this a test rather than a rationalisation.
 
 ### 6.3 Retrieval, fusion, reranking, truncation
 *Every choice here is picked for defensibility over sophistication (invariant 6).*
@@ -168,10 +218,21 @@ FAISS with a benchmark behind it is a stronger answer than adding it.
 because BM25 scores and cosine similarities are on incomparable scales whose distributions
 shift per query.
 
-**Truncation:** reranker score -> calibrated `P(relevant)` via logistic regression, cut at
-0.5, floor of 1 result, and a cap. **Calibration is fit on a held-out split of queries,
-never results.** Fitting the cutoff on the judgements it is evaluated against is leakage
-and is the most likely route to a suspiciously good number.
+**Truncation: two decisions, calibrated separately.**
+
+1. **Query-level no-match.** Before any ranking cutoff, decide whether the catalog can serve
+   this query at all. If it cannot, **return zero results.** Its own classifier, its own
+   threshold, calibrated independently.
+2. **Result-level cutoff.** For queries that pass, reranker score -> calibrated
+   `P(relevant)` via logistic regression, cut at 0.5, with a cap of 20.
+
+**There is no floor of one result.** The earlier version had one, which made abstention
+impossible and left the correct-abstention metric in 6.4 measuring nothing at all — a
+system forced to return something can never be scored on declining to.
+
+**Calibration is fit on the development split only, never on test.** Fitting a cutoff on
+the judgements it is then evaluated against is leakage, and is the most likely route to a
+suspiciously good number.
 
 **Metric consequence:** nDCG@20 cannot see padding. Truncation is therefore scored on a
 set-based companion — F1 of the returned set against the judged relevant set, at each
@@ -183,7 +244,7 @@ system's own cutoff. Ranking quality and stopping quality are different question
 ### 6.4 Labeling protocol and metrics
 *The heaviest-weight component alongside truncation.*
 
-**Query set:** ~45 queries, committed and git-tagged with a timestamp before the engine can
+**Query set:** ~70 queries, committed and git-tagged with a timestamp before the engine can
 return anything; the file hash is printed in the README. Sourced from storefront
 autocomplete, popular-search modules and shopper vocabulary — never from inspecting
 results. Stratified:
@@ -202,16 +263,41 @@ results. Stratified:
 The adversarial stratum is where truncation earns its keep; nothing else punishes a system
 that returns 60 results for a query the catalog cannot serve.
 
-**Pooling:** union the top-10 from every system per query, deduplicate, strip provenance,
-shuffle with a seed derived from the query id. The labeler sees a flat list — no system, no
-rank. Note that the ladder has seven rungs but only **six contribute unique documents**:
-`Hybrid+Rerank+Truncate` returns a prefix of `Hybrid+Rerank`'s results, so it can add
-nothing the pool does not already contain. It is still scored; it just cannot widen the
-pool.
+**Development / test split.** Freezing the query set stops query cherry-picking. It does
+not stop tuning fusion weights, BM25 parameters, rerank depth, enrichment prompts or
+truncation thresholds against results and labels you have already seen — which is the same
+failure wearing a different hat, and the one that actually produces flattering headline
+numbers.
 
-**Volume:** ~25-30 unique products per query across ~45 queries = **1,100-1,350
-judgements**, 2-3 hours. If reduced, reduce systems in the pool, not queries — query count
-drives the confidence intervals.
+So the ~70 queries are split **stratum by stratum** into **30 development** and **40 test**
+at commit time, before any labeling. Development judgements are visible, and are what
+everything is tuned and calibrated against. **Test judgements stay sealed.** Every
+`RunSpec` is frozen and every test `RunArtifact` is written and hashed *before* test
+judgements are revealed. The headline table is computed once, from that frozen state.
+
+If a bug forces a re-run after the seal is broken, the writeup says so and says what
+changed. Breaking the seal quietly is the single failure this entire design exists to
+prevent.
+
+**Pooling:** union the **top-20** from each pool-contributing system per query,
+deduplicate, strip provenance, shuffle with a seed derived from the query id. The labeler
+sees a flat list — no system, no rank.
+
+**Pool depth is 20, and equals both the truncation cap and the deepest reported metric.**
+The earlier version pooled to depth 10 while reporting Recall@20, which left ranks 11-20 of
+every *current* system unjudged and silently scored as irrelevant. That was not a
+hypothetical future-system problem; it was a live defect in the headline number.
+
+**Contributors are chosen for mechanism diversity, not completeness:** ★ `NativeSearch`,
+★ `BM25`, ★ `Dense`, ★ `Hybrid+Rerank`. `BM25+Compound` returns sets overlapping `BM25`
+heavily, `Hybrid` is a fusion of two contributors already present, and
+`Hybrid+Rerank+Truncate` returns a prefix of `Hybrid+Rerank`. Adding them would nearly
+double the labeling cost while contributing very few unseen documents. All seven systems
+are scored; only four widen the pool.
+
+**Volume:** ~45 unique products per query across ~70 queries = **~3,100 judgements**, 6-7
+hours of focused work. Query count drives the confidence intervals, so if this must shrink,
+shrink pool contributors rather than queries.
 
 **Rubric:** graded 0-3. 3 = what was asked for; 2 = valid substitute satisfying the intent;
 1 = related but wrong; 0 = irrelevant. Written with worked examples and committed before
@@ -225,12 +311,26 @@ is a hard ceiling on how much precision anyone should read into the comparison.
 **Pooling's residual bias, disclosed:** a product no system retrieved is never judged, and
 would be scored irrelevant if a future system found it.
 
-**Metrics:** nDCG@10 (ranking), Recall@20 (finding), F1 at each system's own cutoff
-(stopping), correct-abstention rate (adversarial stratum).
+**Metrics:** nDCG@10 (ranking), **Recall@20 against pooled qrels** (finding), F1 at each
+system's own cutoff (stopping), correct-abstention rate (adversarial stratum).
 
-**Confidence intervals:** bootstrap over *queries*, not judgements — the query is the unit
-of variation. At n=45 many differences will not reach significance. The table must show
-that rather than hide it behind point estimates.
+**"Recall" means recall against the pooled judgement set, never exhaustive catalog
+recall**, and is labeled that way everywhere it appears — table headers included. No pooled
+evaluation can measure the latter without judging the entire catalog against every query.
+
+**Statistics.** Independent per-system confidence intervals answer the wrong question. The
+comparison is *paired* — every system answers the same queries — so the headline figures
+are **bootstrapped paired per-query differences** between systems, stratified by query
+type. The difference and its interval are reported directly, rather than two overlapping
+intervals left for the reader to eyeball.
+
+**Stratum weighting is fixed in advance.** The headline score weights the eight strata
+equally *by stratum*, not by query count — otherwise adding three more compound queries
+silently changes what the benchmark optimises for. Per-stratum figures are reported
+alongside, since that is where the findings actually live.
+
+At 40 test queries many differences will still not reach significance, and the table shows
+that rather than hiding it behind point estimates.
 
 **Proxy calibration:** before any automated judge extends results to storefronts 2 and 3,
 its agreement with human labels on the anchor is measured against a threshold fixed in
@@ -261,29 +361,57 @@ outright: exact search is O(n), fine at 5,000 products and not at 500,000.
     engine/       retrieval, fusion, rerank, truncation
     eval/         query set, pooling, labeling tool, metrics, bootstrap
     service/      FastAPI + UI
-    data/         cached responses and versioned artifacts (git-ignored, hashes committed)
+    artifacts/    COMMITTED: query set + split, qrels, taxonomy, prompts, every
+                  RunSpec and RunArtifact, scorecard, model revisions, env lock
+    data/         RETAINED PRIVATELY, git-ignored: raw catalog snapshot,
+                  captured native responses
     docs/         methodology, limitations, the writeup
+
+### What "reproducible" is allowed to mean here
+
+Committing a hash while git-ignoring the bytes lets a reader verify a file they already
+possess and reconstruct nothing. Once the storefront changes, the benchmark becomes
+unrebuildable and the hash proves only that something once existed. The earlier version of
+this spec made exactly that mistake.
+
+Hence the split above. **Everything the project itself produces is committed** — query set
+and split, qrels, taxonomy, prompts, every `RunSpec` and `RunArtifact`, the scorecard,
+model revisions and the environment lock. That is enough to recompute every number in the
+table offline, with no network and no storefront access.
+
+**The raw catalog snapshot and captured native responses are retained but not
+republished**, because they are the merchant's data and invariant 7 governs them. The
+consequence is stated rather than finessed: **the metric computation is publicly
+reproducible; the crawl is not. The scorecard is auditable from a retained private
+snapshot.** Anyone who wants to inspect the snapshot can ask.
 
 ## 8. Build order and submittable checkpoints
 
 Timeline is open-ended, which makes silence the live risk. Each checkpoint is a point where
 the work could be sent as-is.
 
-1. **Query set + rubric committed, timestamped.** Invariant 3 becomes structurally true.
-2. **Ingestion + sync, with the twice-run test passing.** First defensible claim.
-3. **Enrichment + human accuracy sample.** First published number.
-4. **Ladder + harness + labeled ground truth -> the comparison table.** *Submittable: this is the project.*
-5. **Truncation calibrated, successes and failure case documented.**
-6. **Deployment + latency/cost table.**
-7. **The writeup.**
+1. **Query set + rubric committed and timestamped, split dev/test.** Invariant 3 becomes structurally true.
+2. **Ingestion + sync, twice-run test passing.** First defensible claim.
+3. **Enrichment + human accuracy sample (per-field macro-F1).** First published number.
+4. **Development labeling; ladder tuned and calibrated against dev only.**
+5. **RunSpecs frozen, test RunArtifacts written and hashed, then the test seal is broken -> the comparison table.** *Submittable: this is the project.*
+6. **Truncation successes and failure case documented.**
+7. **Deployment + latency/cost table.**
+8. **The writeup.**
 
 ## 9. Disclosures to publish (invariant 5)
 
 - We tuned on the catalog we benchmark.
 - Our system is specialised; the comparison is general-purpose.
 - The builder is the labeler; intra-annotator agreement is published as the ceiling.
-- Pooling cannot judge what no system retrieved.
-- At n=45 queries, many differences are not statistically significant.
+- Pooling cannot judge what no system retrieved, and mildly favours the four systems that
+  contribute to the pool over the three that do not.
+- Reported recall is recall against pooled qrels, never exhaustive catalog recall.
+- The baseline is a black box. Exact snapshot equality with our crawl cannot be proven —
+  only audited for overlap and disclosed.
+- The crawl is not publicly reproducible; the scorecard is auditable from a retained
+  private snapshot.
+- At 40 test queries, many differences are not statistically significant.
 
 ## 10. Open questions
 
