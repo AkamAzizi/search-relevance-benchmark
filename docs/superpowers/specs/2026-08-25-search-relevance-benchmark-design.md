@@ -487,6 +487,16 @@ definition of done. One thing earns real estate — truncation must be *visible*
 — relevance ends here" beside a baseline returning 60 padded ones is the screenshot that
 carries the ninety-second read. Facets come from the enriched enums.
 
+**Imagery: the public demo shows no product images.** Not hotlinked, not rehosted. The
+merchant's photography is theirs, and a benchmark does not need it to make its point — the
+comparison is about which products are returned and where the list stops, both of which read
+fine as text. The *labeling tool* does show thumbnails, because judging fashion relevance
+from text alone is slow and unreliable; that tool runs locally, is never deployed, and its
+cached images are not republished.
+
+This costs the demo some visual appeal, and that is an accepted trade rather than an
+oversight.
+
 **Answer layer:** narrow. Grounded strictly in retrieved product fields. The test that
 matters is refusal — ask something the catalog cannot support and confirm it declines.
 
@@ -565,8 +575,8 @@ the work could be sent as-is.
 
 ## 10. Open questions
 
-- Public-demo product imagery: hotlink from the merchant CDN, or omit images entirely.
-  (Separate from the *labeling tool*, which needs thumbnails locally — judging fashion
-  relevance from text alone is slow and unreliable — and which is private, not published.)
 - Exact anchor catalog size: bounded to 2,000-2,250 by probing; the real figure comes from
   the first full ingest.
+
+All other open questions are closed. Storefronts are selected and verified, the labeling
+scope is fixed to the anchor alone, and the public demo carries no product imagery.
