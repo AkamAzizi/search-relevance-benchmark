@@ -217,21 +217,47 @@ FAISS with a benchmark behind it is a stronger answer than adding it.
 because BM25 scores and cosine similarities are on incomparable scales whose distributions
 shift per query.
 
-**Truncation: two decisions, calibrated separately.**
+**Truncation: two decisions, fitted separately, both on development data only.**
 
-1. **Query-level no-match.** Before any ranking cutoff, decide whether the catalog can serve
-   this query at all. If it cannot, **return zero results.** Its own classifier, its own
-   threshold, calibrated independently.
-2. **Result-level cutoff.** For queries that pass, reranker score -> calibrated
-   `P(relevant)` via logistic regression, cut at 0.5, with a cap of 20.
+**1. Query-level no-match.** Before any ranking cutoff, decide whether the catalog can serve
+this query at all. If it cannot, **return zero results.**
 
-**There is no floor of one result.** The earlier version had one, which made abstention
-impossible and left the correct-abstention metric in 6.4 measuring nothing at all — a
-system forced to return something can never be scored on declining to.
+This is a **single threshold `T` on the maximum relevance score** across candidates — one
+parameter, not a fitted classifier. The development split holds only 5 absent queries, and a
+multi-feature classifier fitted on 5 positives would overfit so badly that the test result
+would be noise. One parameter is what this data can support.
 
-**Calibration is fit on the development split only, never on test.** Fitting a cutoff on
-the judgements it is then evaluated against is leakage, and is the most likely route to a
-suspiciously good number.
+The wording is deliberate: **maximum relevance score, not `P(relevant)`.** Calling it a
+probability asserts a calibration that nothing here establishes.
+
+**Pre-registered selection rule, fixed before labeling:** `T` is the largest threshold whose
+false-abstention rate on the 25 answerable development queries does not exceed 10% (at most
+2 of 25), ties broken toward the smaller `T`. Largest-subject-to-a-budget rather than
+balanced accuracy, for two reasons: falsely abstaining on a query the catalog *can* serve is
+worse for a shopper than over-returning on one it cannot, and false-abstention is estimated
+on the larger class, so the constrained side is the better-measured one.
+
+**2. Result-level cutoff.** For queries that pass, a logistic regression maps reranker score
+to a relevance estimate. **Whether that estimate may be called `P(relevant)` and cut at 0.5
+depends on a calibration check it must pass first** — a reliability curve and Brier score on
+development data, both published. If it calibrates, cut at 0.5 and call it a probability. If
+it does not, the cut point is selected on development data by the same
+largest-subject-to-a-budget rule, and the output is called a relevance score. Cap of 20
+either way.
+
+**There is no floor of one result.** An earlier version had one, which made abstention
+impossible and left the correct-abstention metric in 6.4 measuring nothing at all — a system
+forced to return something can never be scored on declining to.
+
+**Both thresholds are selected on development data only. Test data is used exactly once, for
+final evaluation.** Fitting a cutoff on the judgements it is then evaluated against is
+leakage, and the most likely route to a suspiciously good number.
+
+**The abstention sensitivity curve is reported, not selected from.** Correct-abstention and
+false-abstention across a range of `T` tells a reader how much the result depends on where
+the line was drawn, which is worth publishing. But it is published *after* `T` is fixed by
+the pre-registered rule. Choosing `T` by reading that curve on test data would be exactly
+the cherry-picking the sealed split exists to prevent.
 
 **Metric consequence:** nDCG@20 cannot see padding. Truncation is therefore scored on a
 set-based companion — F1 of the returned set against the judged relevant set, at each
@@ -305,16 +331,25 @@ fixed in advance:
    **paired pooled-Recall@20**. Recall rather than nDCG because the claim is about
    *reaching* documents that conventional stemming cannot, not about ordering them.
 
-2. **Balanced abstention.** The no-match classifier is judged on both halves together:
-   correct-abstention rate on absent queries **and** false-abstention rate across all
-   answerable queries. Reported as a pair, never separately — correct abstention alone
-   rewards a system that refuses everything, which is the degenerate solution this metric
-   exists to catch.
+2. **Balanced abstention** — *pre-registered but exploratory.* The no-match decision is
+   judged on both halves together: correct-abstention rate on absent queries **and**
+   false-abstention rate across all answerable queries. Reported as a pair, never
+   separately — correct abstention alone rewards a system that refuses everything, which is
+   the degenerate solution this metric exists to catch.
+
+   **This result is descriptive, not confirmatory.** Ten absent test queries, with a
+   threshold chosen from five development positives, cannot support a confirmatory claim,
+   and the writeup will not make one. Pre-registering it is still worth doing: fixing the
+   metric and the selection rule in advance prevents metric-shopping after the fact, even
+   where the sample is too small to conclude anything. Pre-registration and confirmatory
+   status are separable, and conflating them is how underpowered results get oversold.
 
 **Pre-registration buys honesty, not statistical power.** At n=10 per primary stratum these
 are still small samples. Effect sizes and intervals are reported; significance is not
-promised, claimed, or implied. **Every other stratum is explicitly descriptive** — point
-estimates, labeled as such, carrying no inferential claim.
+promised, claimed, or implied. Hypothesis 1 is the only result treated as confirmatory, and
+even it is reported as an effect size with an interval rather than as a significance test.
+**Hypothesis 2 and every other stratum are explicitly descriptive** — point estimates,
+labeled as such, carrying no inferential claim.
 
 **Pooling:** union the **top-20 from every scored system** per query, deduplicate, strip
 provenance, shuffle with a seed derived from the query id. The labeler sees a flat list —
@@ -456,8 +491,13 @@ the work could be sent as-is.
 - The builder is the labeler; intra-annotator agreement is published as the ceiling.
 - Pooling cannot judge what no system retrieved. Every scored system contributes its top-20,
   so no system is disadvantaged relative to another.
-- Only two hypotheses are pre-registered. Every other stratum is descriptive and carries no
-  inferential claim; at n=3-4 per descriptive stratum, none could.
+- Only two hypotheses are pre-registered, and only one of them is confirmatory. Every other
+  stratum is descriptive and carries no inferential claim; at n=3-4 per descriptive stratum,
+  none could.
+- The abstention result is descriptive: 10 absent test queries, with a threshold chosen from
+  5 development positives, cannot support a confirmatory claim.
+- A relevance score is called a probability only where a published calibration check
+  supports it.
 - Reported recall is recall against pooled qrels, never exhaustive catalog recall.
 - The baseline is a black box. Exact snapshot equality with our crawl cannot be proven —
   only audited for overlap and disclosed.
