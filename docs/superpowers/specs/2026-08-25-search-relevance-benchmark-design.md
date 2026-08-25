@@ -108,12 +108,12 @@ name what produced it has no business in a benchmark.
 
 | System | Adds |
 |---|---|
-| ★ `NativeSearch` | the baseline — the storefront's real search |
-| ★ `BM25` | lexical only |
+| `NativeSearch` | the baseline — the storefront's real search |
+| `BM25` | lexical only |
 | `BM25+Compound` | lexical with Swedish compound splitting |
-| ★ `Dense` | semantic only |
+| `Dense` | semantic only |
 | `Hybrid` | RRF fusion |
-| ★ `Hybrid+Rerank` | cross-encoder |
+| `Hybrid+Rerank` | cross-encoder |
 | `Hybrid+Rerank+Truncate` | the cutoff |
 
 The ladder is an ablation, not a device for manufacturing a loser. Nothing here guarantees
@@ -122,8 +122,7 @@ frozen experiment tests, and whatever it produces is what gets reported. A metho
 sounds as though it *needs* a losing configuration undercuts the honesty it was meant to
 demonstrate.
 
-★ marks the four systems that contribute documents to the judgement pool (see 6.4). The
-rest are scored but do not widen it.
+Every rung is scored, and every rung contributes its top-20 to the judgement pool (6.4).
 
 ## 6. Components
 
@@ -269,8 +268,8 @@ truncation thresholds against results and labels you have already seen — which
 failure wearing a different hat, and the one that actually produces flattering headline
 numbers.
 
-So the ~70 queries are split **stratum by stratum** into **30 development** and **40 test**
-at commit time, before any labeling. Development judgements are visible, and are what
+So the ~70 queries are split into **30 development** and **40 test** at commit time,
+before any labeling, using the asymmetric allocation below. Development judgements are visible, and are what
 everything is tuned and calibrated against. **Test judgements stay sealed.** Every
 `RunSpec` is frozen and every test `RunArtifact` is written and hashed *before* test
 judgements are revealed. The headline table is computed once, from that frozen state.
@@ -279,25 +278,74 @@ If a bug forces a re-run after the seal is broken, the writeup says so and says 
 changed. Breaking the seal quietly is the single failure this entire design exists to
 prevent.
 
-**Pooling:** union the **top-20** from each pool-contributing system per query,
-deduplicate, strip provenance, shuffle with a seed derived from the query id. The labeler
-sees a flat list — no system, no rank.
+**The allocation is asymmetric, and fixed at commit time.** Spreading 40 test queries
+evenly over eight strata leaves five each — too thin to support the two results the project
+actually rests on. So the test split is weighted toward them:
+
+| Stratum | Dev | Test | Role |
+|---|---|---|---|
+| compound | 4 | **10** | primary hypothesis 1 |
+| adversarial / absent | 5 | **10** | primary hypothesis 2 |
+| exact / brand | 4 | 4 | descriptive |
+| cross-language | 3 | 4 | descriptive |
+| category | 4 | 3 | descriptive |
+| attribute | 4 | 3 | descriptive |
+| natural language | 3 | 3 | descriptive |
+| misspelling | 3 | 3 | descriptive |
+| **total** | **30** | **40** | |
+
+Among the six non-primary strata, exact/brand and cross-language take the extra query each:
+exact/brand is where the lexical-versus-dense tradeoff is expected to surface, and
+cross-language is a named section 8 deliverable that requires a matched-language control.
+
+**Pre-registered primary hypotheses.** Two, named before any labeling, with their metrics
+fixed in advance:
+
+1. **The compound mechanism.** `BM25+Compound` − `BM25` on compound queries, primary metric
+   **paired pooled-Recall@20**. Recall rather than nDCG because the claim is about
+   *reaching* documents that conventional stemming cannot, not about ordering them.
+
+2. **Balanced abstention.** The no-match classifier is judged on both halves together:
+   correct-abstention rate on absent queries **and** false-abstention rate across all
+   answerable queries. Reported as a pair, never separately — correct abstention alone
+   rewards a system that refuses everything, which is the degenerate solution this metric
+   exists to catch.
+
+**Pre-registration buys honesty, not statistical power.** At n=10 per primary stratum these
+are still small samples. Effect sizes and intervals are reported; significance is not
+promised, claimed, or implied. **Every other stratum is explicitly descriptive** — point
+estimates, labeled as such, carrying no inferential claim.
+
+**Pooling:** union the **top-20 from every scored system** per query, deduplicate, strip
+provenance, shuffle with a seed derived from the query id. The labeler sees a flat list —
+no system, no rank.
 
 **Pool depth is 20, and equals both the truncation cap and the deepest reported metric.**
-The earlier version pooled to depth 10 while reporting Recall@20, which left ranks 11-20 of
-every *current* system unjudged and silently scored as irrelevant. That was not a
-hypothetical future-system problem; it was a live defect in the headline number.
+An earlier version pooled to depth 10 while reporting Recall@20, leaving ranks 11-20 of
+every *current* system unjudged and silently scored as irrelevant — not a hypothetical
+future-system problem but a live defect in the headline number.
 
-**Contributors are chosen for mechanism diversity, not completeness:** ★ `NativeSearch`,
-★ `BM25`, ★ `Dense`, ★ `Hybrid+Rerank`. `BM25+Compound` returns sets overlapping `BM25`
-heavily, `Hybrid` is a fusion of two contributors already present, and
-`Hybrid+Rerank+Truncate` returns a prefix of `Hybrid+Rerank`. Adding them would nearly
-double the labeling cost while contributing very few unseen documents. All seven systems
-are scored; only four widen the pool.
+**Every scored system contributes. No exceptions.** A later revision briefly restricted
+contributors to four "mechanically diverse" systems to halve labeling cost. That reasoning
+was self-defeating. Deduplication already makes overlap free, so a heavily-overlapping
+system costs almost nothing to include; and a system contributing *many* unique documents
+is contributing precisely the documents that most need judging. The saving only
+materialises in exactly the case where the exclusion does the most damage.
 
-**Volume:** ~45 unique products per query across ~70 queries = **~3,100 judgements**, 6-7
-hours of focused work. Query count drives the confidence intervals, so if this must shrink,
-shrink pool contributors rather than queries.
+Concretely it would have sabotaged primary hypothesis 1. `BM25+Compound` exists to reach
+documents conventional stemming cannot, so its finds are unique to it almost by definition.
+Excluding it would have left those documents unjudged and scored them irrelevant —
+measuring the compound mechanism as weaker than it is, through a defect introduced by the
+measurement itself.
+
+`Hybrid+Rerank+Truncate` is the one system that provably adds nothing: its output is a
+prefix of `Hybrid+Rerank`'s by construction rather than by empirical overlap. It contributes
+anyway, because dedup makes doing so free.
+
+**Volume:** six mechanically distinct systems at depth 20 yield roughly 50-65 unique
+products per query. Across 70 queries that is **~3,500-4,500 judgements, 7-9 hours.** This
+is the third upward revision of this estimate, and it is the honest cost of a pool deep
+enough and wide enough to support the metrics computed from it.
 
 **Rubric:** graded 0-3. 3 = what was asked for; 2 = valid substitute satisfying the intent;
 1 = related but wrong; 0 = irrelevant. Written with worked examples and committed before
@@ -329,8 +377,10 @@ equally *by stratum*, not by query count — otherwise adding three more compoun
 silently changes what the benchmark optimises for. Per-stratum figures are reported
 alongside, since that is where the findings actually live.
 
-At 40 test queries many differences will still not reach significance, and the table shows
-that rather than hiding it behind point estimates.
+Effect sizes and intervals are what the table reports. At these sample sizes many
+differences will not reach significance; the table shows that plainly rather than hiding it
+behind point estimates, and nothing outside the two pre-registered hypotheses carries an
+inferential claim at all.
 
 **Proxy calibration:** before any automated judge extends results to storefronts 2 and 3,
 its agreement with human labels on the anchor is measured against a threshold fixed in
@@ -390,7 +440,7 @@ snapshot.** Anyone who wants to inspect the snapshot can ask.
 Timeline is open-ended, which makes silence the live risk. Each checkpoint is a point where
 the work could be sent as-is.
 
-1. **Query set + rubric committed and timestamped, split dev/test.** Invariant 3 becomes structurally true.
+1. **Query set + rubric committed and timestamped; dev/test split and stratum allocation fixed; two primary hypotheses pre-registered.** Invariant 3 becomes structurally true.
 2. **Ingestion + sync, twice-run test passing.** First defensible claim.
 3. **Enrichment + human accuracy sample (per-field macro-F1).** First published number.
 4. **Development labeling; ladder tuned and calibrated against dev only.**
@@ -404,8 +454,10 @@ the work could be sent as-is.
 - We tuned on the catalog we benchmark.
 - Our system is specialised; the comparison is general-purpose.
 - The builder is the labeler; intra-annotator agreement is published as the ceiling.
-- Pooling cannot judge what no system retrieved, and mildly favours the four systems that
-  contribute to the pool over the three that do not.
+- Pooling cannot judge what no system retrieved. Every scored system contributes its top-20,
+  so no system is disadvantaged relative to another.
+- Only two hypotheses are pre-registered. Every other stratum is descriptive and carries no
+  inferential claim; at n=3-4 per descriptive stratum, none could.
 - Reported recall is recall against pooled qrels, never exhaustive catalog recall.
 - The baseline is a black box. Exact snapshot equality with our crawl cannot be proven —
   only audited for overlap and disclosed.
