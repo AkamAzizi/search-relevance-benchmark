@@ -57,12 +57,35 @@ Hard criteria, checked in this order:
 Criterion 4 exists because benchmarking a surface real shoppers don't use is the "rigged
 comparison" failure: an honest mistake that reads as dishonesty.
 
-**Status:** see `storefront-research.md`. Zoovillage is the sole surviving anchor candidate
-and still needs overlay and catalog-language verification. The Footway group (Footway,
-Sportamore, Stayhard, Caliroots) is rejected — Nosto overlay plus an active divestment
-process following the 2025 bankruptcy. Depict's real customer list is 79 brands and
-includes Swedish multi-brand retailers (Aplace, Grandpa) that a shorter exclusion list
-would have missed. English-language slot and Depict reference store remain unfilled.
+**Selected, verified 2026-08-25:**
+
+| Slot | Store | Products | Vendors | Catalog language | Search |
+|---|---|---|---|---|---|
+| **Anchor** | **zoovillage.com** | ~2,000-2,250 | 31 | Swedish descriptions, English titles | native Shopify |
+| **English** | **rezetstore.dk** | >1,250 | 33 | English | native Shopify |
+
+Both pass all six criteria. Overlay checks: Zoovillage loads Klaviyo (email) and Pertento
+(A/B testing) but no search vendor; Rezet loads Klaviyo only. Both server-render results
+from `action="/search"`. An apparent Constructor.io hit on Zoovillage was a false positive —
+JavaScript `constructor()` declarations in Shopify web components — and was discarded after
+checking for the real `cnstrc` fingerprint.
+
+**Zoovillage carries an unplanned bonus:** English product titles over Swedish
+descriptions. The cross-language retrieval problem is therefore present *inside a single
+catalog*, giving the multilingual claim a matched-catalog control rather than one confounded
+across two storefronts. Its descriptions are also densely compounded — `bomberjacka`,
+`coachjacka`, `mockajacka`, `pilejacka`, `hybridjacka`, `flanellskjorta`, `jeansskjorta`,
+`manchesterskjorta`, `axelväska`, `handväska`, `läderväska`, `långklänning`, `maxiklänning`
+— which is the section 4 mechanism available in quantity.
+
+**Rejected:** the Footway group (Footway, Sportamore, Stayhard, Caliroots) — Nosto overlay
+plus an active divestment following the 2025 bankruptcy. Norse Store, Storm Fashion (under
+1,000). Junkyard (blocks automated access). Outnorth, Addnature, Dunken, Nitty Gritty,
+Care of Carl, Johnells (no catalog API).
+
+**On Depict's customer list:** it is 79 brands, not the 9 initially excluded, and it
+includes Swedish *multi-brand* retailers — Aplace and Grandpa — that a shorter list would
+have missed. Neither selected store appears on it.
 
 ## 5. Architecture: dataset-centric with a thin service
 
