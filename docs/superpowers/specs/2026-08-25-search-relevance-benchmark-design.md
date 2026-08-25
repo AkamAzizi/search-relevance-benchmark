@@ -230,12 +230,20 @@ would be noise. One parameter is what this data can support.
 The wording is deliberate: **maximum relevance score, not `P(relevant)`.** Calling it a
 probability asserts a calibration that nothing here establishes.
 
-**Pre-registered selection rule, fixed before labeling:** `T` is the largest threshold whose
-false-abstention rate on the 25 answerable development queries does not exceed 10% (at most
-2 of 25), ties broken toward the smaller `T`. Largest-subject-to-a-budget rather than
-balanced accuracy, for two reasons: falsely abstaining on a query the catalog *can* serve is
-worse for a shopper than over-returning on one it cannot, and false-abstention is estimated
-on the larger class, so the constrained side is the better-measured one.
+**Pre-registered selection rule, fixed before labeling:** `T` is the largest threshold
+producing **at most 2 false abstentions across the 25 answerable development queries**, ties
+broken toward the smaller `T`.
+
+State this precisely: it is an **empirical development-set constraint of <=2/25, not
+evidence that the population false-abstention rate is below 10%.** Twenty-five queries
+cannot support that inference — the binomial interval around 2/25 is far too wide to exclude
+much of anything — and the writeup describes it in exactly these terms. It is a reproducible
+rule for picking a threshold, not a performance claim.
+
+Largest-subject-to-a-budget rather than balanced accuracy, for two reasons: falsely
+abstaining on a query the catalog *can* serve is worse for a shopper than over-returning on
+one it cannot, and false abstention is observed on the larger class, so the constrained side
+is the better-measured one.
 
 **2. Result-level cutoff.** For queries that pass, a logistic regression maps reranker score
 to a relevance estimate. **Whether that estimate may be called `P(relevant)` and cut at 0.5
