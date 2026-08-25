@@ -32,9 +32,10 @@ weaker, because its entire value is that its numbers can be trusted.
 
 ## 3. Scope
 
-**In:** one anchor catalog labeled thoroughly; two languages; one market; ingestion,
-enrichment, hybrid retrieval, reranking, truncation, merchandising rules, a narrow answer
-layer, the evaluation harness, the labeling tool, deployment, cost/latency accounting.
+**In:** one anchor catalog labeled thoroughly by hand; two additional storefronts scored by
+calibrated proxy; two languages; one market; ingestion, enrichment, hybrid retrieval,
+reranking, truncation, merchandising rules, a narrow answer layer, the evaluation harness,
+the labeling tool, deployment, cost/latency accounting.
 
 **Out:** recommendations beyond search, personalisation, A/B infrastructure, multi-tenancy,
 auth, anything resembling a commercial product, catalogs larger than those chosen.
@@ -59,10 +60,16 @@ comparison" failure: an honest mistake that reads as dishonesty.
 
 **Selected, verified 2026-08-25:**
 
-| Slot | Store | Products | Vendors | Catalog language | Search |
-|---|---|---|---|---|---|
-| **Anchor** | **zoovillage.com** | ~2,000-2,250 | 31 | Swedish descriptions, English titles | native Shopify |
-| **English** | **rezetstore.dk** | >1,250 | 33 | English | native Shopify |
+| Role | Store | Products | Vendors | Catalog language | Search | Scored by |
+|---|---|---|---|---|---|---|
+| **Anchor** | **zoovillage.com** | ~2,000-2,250 | 31 | Swedish descriptions, English titles | native Shopify | **human labels** |
+| **Storefront 2** | **rezetstore.dk** | >1,250 | 33 | English | native Shopify | calibrated proxy |
+| **Storefront 3** | **galvingreen.com** | >1,000 | 1 | English | native Shopify | calibrated proxy |
+
+Only the anchor is hand-labeled. Storefronts 2 and 3 exist to test whether the findings
+transfer, and are scored by proxy — which happens only if the proxy first clears the
+pre-registered agreement threshold in 6.4. If it does not, both are cut and the project
+reports the anchor alone.
 
 Both pass all six criteria. Overlay checks: Zoovillage loads Klaviyo (email) and Pertento
 (A/B testing) but no search vendor; Rezet loads Klaviyo only. Both server-render results
@@ -85,7 +92,26 @@ Care of Carl, Johnells (no catalog API).
 
 **On Depict's customer list:** it is 79 brands, not the 9 initially excluded, and it
 includes Swedish *multi-brand* retailers — Aplace and Grandpa — that a shorter list would
-have missed. Neither selected store appears on it.
+have missed. No selected store appears on it.
+
+**The planned Depict-powered reference is cut**, on two independent grounds:
+
+*Not comparable.* Depict sells to single-brand fashion labels with small catalogs — Eytys
+53 products, CDLP under 500 — and none of them is the anchor. Any number from a Depict
+store would be a different catalog, different queries and different qrels. Placing it in
+the comparison table would be exactly the misleading comparison this document exists to
+prevent.
+
+*Not verifiable.* Galvin Green appears on Depict's customer list and shows **zero Depict
+references** on its homepage or search page; Depict appears to operate server-side, leaving
+no client-side fingerprint, and Depict's own site does not say which customers use search
+as opposed to collections or recommendations. Attributing a storefront's search to Depict
+would be an unverifiable claim.
+
+Galvin Green is therefore retained as storefront 3 on its own merits — native search, over
+1,000 products — with **no claim about what powers it**. Depict remains in the writeup as
+motivating prior art; independently reproducing and measuring the truncation idea needs no
+number attributed to them.
 
 ## 5. Architecture: dataset-centric with a thin service
 
@@ -449,9 +475,10 @@ behind point estimates, and nothing outside the two pre-registered hypotheses ca
 inferential claim at all.
 
 **Proxy calibration:** before any automated judge extends results to storefronts 2 and 3,
-its agreement with human labels on the anchor is measured against a threshold fixed in
-advance (proposed: kappa >= 0.6). Below it, the proxy is unused and the extra storefronts
-are cut.
+its agreement with the anchor's human labels is measured against a threshold fixed in
+advance: **kappa >= 0.6**. Below it, the proxy is unused and both extra storefronts are
+cut, leaving the hand-labeled anchor result standing on its own. Agreement is measured on
+the anchor's judgements, which the proxy has never seen used as training signal.
 
 ### 6.5 Interface, answer layer, deployment, cost
 
@@ -538,7 +565,8 @@ the work could be sent as-is.
 
 ## 10. Open questions
 
-- Anchor storefront unconfirmed (Zoovillage pending overlay + language verification).
-- English-language Nordic storefront unfilled.
-- Depict reference store unfilled.
 - Public-demo product imagery: hotlink from the merchant CDN, or omit images entirely.
+  (Separate from the *labeling tool*, which needs thumbnails locally — judging fashion
+  relevance from text alone is slow and unreliable — and which is private, not published.)
+- Exact anchor catalog size: bounded to 2,000-2,250 by probing; the real figure comes from
+  the first full ingest.
