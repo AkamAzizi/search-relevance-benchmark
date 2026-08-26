@@ -1,0 +1,14 @@
+{
+  "attempt_id": "bc33bfdd65d7454bac47fbc8b0409e85",
+  "count": 1973,
+  "crawled_at": "2026-08-26T13:21:16.890053+00:00",
+  "digest": "90fd57138a19f9603810515740190338a85dab7110f9eda926c3a2539f89464b",
+  "domain": "rezetstore.dk",
+  "request_profile": {
+    "accept_language": "en-GB,en;q=0.9",
+    "locale": "en"
+  },
+  "run_id": "sf2-001",
+  "schema_version": 1,
+  "snapshot_sha256": "ac9e5a86d989e3d0a1416b7f81c50cfe1a37d7507f05f00f6930d85d4f6b0353"
+}
