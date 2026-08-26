@@ -51,7 +51,16 @@ def _digest(payload: dict) -> str:
 
 
 def source_payload_hash(rec: dict) -> str:
-    return _digest(rec["source_payload"])
+    # Some storefronts stamp `updated_at` with the response time rather than a
+    # per-edit time, so every product on a page shares one value that changes on
+    # every crawl. Hashing it would make crawl verification impossible and
+    # manufacture a version for every product on every run. Excluded from the
+    # digest only; the raw value is still stored in source_payload untouched.
+    payload = deepcopy(rec["source_payload"])
+    payload.pop("updated_at", None)
+    for variant in payload.get("variants") or []:
+        variant.pop("updated_at", None)
+    return _digest(payload)
 
 
 def enrichment_input_hash(rec: dict) -> str:

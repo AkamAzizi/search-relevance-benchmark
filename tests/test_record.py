@@ -78,11 +78,31 @@ def test_title_change_moves_both_hashes():
     assert enrichment_input_hash(a) != enrichment_input_hash(b)
 
 
-def test_updated_at_alone_moves_source_hash_only():
+def test_updated_at_alone_moves_neither_hash():
+    # Some storefronts stamp updated_at with the response time, not an edit time.
     touched = dict(RAW, updated_at="2026-08-20T09:00:00Z")
     a, b = normalize(RAW), normalize(touched)
-    assert source_payload_hash(a) != source_payload_hash(b)
+    assert source_payload_hash(a) == source_payload_hash(b)
     assert enrichment_input_hash(a) == enrichment_input_hash(b)
+
+
+def test_variant_updated_at_alone_moves_neither_hash():
+    variants = [dict(RAW["variants"][0], updated_at="2026-08-20T09:00:00Z"),
+                RAW["variants"][1]]
+    touched = dict(RAW, variants=variants)
+    a, b = normalize(RAW), normalize(touched)
+    assert source_payload_hash(a) == source_payload_hash(b)
+    assert enrichment_input_hash(a) == enrichment_input_hash(b)
+
+
+def test_updated_at_is_retained_in_source_payload_for_version_history():
+    variants = [dict(RAW["variants"][0], updated_at="2026-07-15T00:00:00Z"),
+                RAW["variants"][1]]
+    with_variant_timestamp = dict(RAW, variants=variants)
+    rec = normalize(with_variant_timestamp)
+    # Not hashed (see test_updated_at_alone_moves_neither_hash), but still stored verbatim.
+    assert rec["source_payload"]["updated_at"] == "2026-08-01T10:00:00Z"
+    assert rec["source_payload"]["variants"][0]["updated_at"] == "2026-07-15T00:00:00Z"
 
 
 def test_enrichment_fields_are_a_strict_subset():
