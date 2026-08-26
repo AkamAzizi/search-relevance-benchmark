@@ -97,7 +97,14 @@ def ingest(domain: str, data_dir: Path, run_id: str, profile: RequestProfile,
     # inspect, not objects to overwrite silently. Both artifacts land before sync() commits,
     # so a write failure here never leaves the store durably ahead of what's on disk.
     _write_new(snapshot_path, snapshot_bytes)
-    _write_new(manifest_path, manifest_bytes)
+    try:
+        _write_new(manifest_path, manifest_bytes)
+    except Exception:
+        # The snapshot this call just wrote would otherwise outlive the failed run and
+        # block every retry of this run id with ArtifactExists. A prior run's artifact
+        # is never touched here: this path only unlinks the file written moments above.
+        snapshot_path.unlink(missing_ok=True)
+        raise
     report = sync(conn, records, now=now)
     return IngestResult(domain, run_id, manifest, report, snapshot_path, manifest_path)
 

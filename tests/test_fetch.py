@@ -1,8 +1,10 @@
 import json
+import subprocess
 
 import pytest
 
-from catalog.fetch import Challenged, FetchError, PoliteFetcher, RequestProfile
+from catalog.fetch import (Challenged, FetchError, PoliteFetcher, RequestProfile,
+                           USER_AGENT, curl_transport)
 
 
 SV = RequestProfile("sv-SE", "sv-SE,sv;q=0.9,en;q=0.5")
@@ -98,3 +100,51 @@ def test_request_profile_partitions_the_cache(tmp_path):
         "https://x.test/p", namespace="a"
     )
     assert calls == ["sv-SE", "en"]
+
+
+def test_default_delay_is_three_seconds(tmp_path):
+    # Every other test in this suite injects delay=0.0; this is the one place the
+    # real default - the pacing that protects third parties - gets asserted.
+    assert PoliteFetcher(tmp_path, SV).delay == 3.0
+
+
+def test_user_agent_names_the_project_with_no_contact_email():
+    assert "@" not in USER_AGENT
+    assert USER_AGENT == (
+        "SearchEvalResearch/0.1 (+search-relevance benchmarking; polite, cached)"
+    )
+
+
+def test_curl_transport_reads_a_local_file_url_with_no_network(tmp_path):
+    body_path = tmp_path / "body.json"
+    body_path.write_text('{"products": []}')
+    profile = RequestProfile("sv-SE", "sv-SE,sv;q=0.9,en;q=0.5")
+    assert curl_transport(f"file://{body_path}", profile) == b'{"products": []}'
+
+
+def test_curl_transport_maps_nonzero_exit_to_fetcherror_with_no_network(tmp_path):
+    missing = tmp_path / "does-not-exist.json"
+    profile = RequestProfile("sv-SE", "sv-SE,sv;q=0.9,en;q=0.5")
+    with pytest.raises(FetchError, match="curl exit"):
+        curl_transport(f"file://{missing}", profile)
+
+
+def test_curl_transport_pins_user_agent_and_accept_language(monkeypatch):
+    captured = {}
+    def fake_run(argv, capture_output):
+        captured["argv"] = argv
+        class Completed:
+            returncode = 0
+            stdout = b"ok"
+            stderr = b""
+        return Completed()
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    profile = RequestProfile("sv-SE", "sv-SE,sv;q=0.9,en;q=0.5")
+    curl_transport("https://x.test/products.json", profile)
+
+    argv = captured["argv"]
+    assert argv[0] == "curl"
+    assert "--fail-with-body" in argv
+    assert argv[argv.index("-A") + 1] == USER_AGENT
+    assert argv[argv.index("-H") + 1] == "Accept-Language: sv-SE,sv;q=0.9,en;q=0.5"

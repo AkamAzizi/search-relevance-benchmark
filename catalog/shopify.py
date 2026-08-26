@@ -24,6 +24,14 @@ def _decode_products(body: bytes) -> list[dict]:
     for product in products:
         if not isinstance(product, dict) or "id" not in product:
             raise InconsistentCrawl("product element is not a dict with an id field")
+        for field in ("variants", "options", "images"):
+            value = product.get(field)
+            if value is None:
+                continue
+            if not isinstance(value, list) or not all(isinstance(el, dict) for el in value):
+                raise InconsistentCrawl(
+                    f"product {product['id']}: field {field!r} is not a list of objects"
+                )
     return products
 
 
@@ -82,10 +90,22 @@ def crawl_verified(fetcher, domain: str, attempt_id: str, max_pages: int = 60,
     second_manifest = build_manifest(second)
 
     if first_manifest["digest"] != second_manifest["digest"]:
+        first_hashes = {r["product_id"]: source_payload_hash(r) for r in first}
+        second_hashes = {r["product_id"]: source_payload_hash(r) for r in second}
+        only_first = sorted(set(first_hashes) - set(second_hashes))
+        only_second = sorted(set(second_hashes) - set(first_hashes))
+        differing = sorted(
+            pid for pid in set(first_hashes) & set(second_hashes)
+            if first_hashes[pid] != second_hashes[pid]
+        )
+        samples = only_first or only_second or differing
+        sample_note = f"; e.g. {', '.join(samples[:3])}" if samples else ""
         raise InconsistentCrawl(
             f"{domain}: catalog changed between crawls "
             f"({first_manifest['count']} then {second_manifest['count']} products). "
-            f"Discard and re-crawl."
+            f"{len(only_first)} id(s) only in the first crawl, {len(only_second)} only in "
+            f"the second, {len(differing)} present in both with differing content"
+            f"{sample_note}. Discard and re-crawl."
         )
     count = second_manifest["count"]
     if count < minimum_count:

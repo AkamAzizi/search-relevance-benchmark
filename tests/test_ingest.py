@@ -1,3 +1,4 @@
+import itertools
 import json
 import hashlib
 
@@ -84,6 +85,43 @@ def test_running_ingest_twice_produces_no_new_versions_or_jobs(tmp_path):
     assert second.report.unchanged == 2
 
 
+def test_response_stamped_updated_at_survives_verification_and_repeat_ingest(tmp_path):
+    """The anchor storefront stamps updated_at with the response time: every product on
+    a response shares one identical, ever-increasing value. Hashing it would make crawl
+    verification structurally impossible and would manufacture a version per product per
+    run (2128127). Nothing else in the suite pins that against the real anchor behaviour."""
+    stamp = itertools.count()
+
+    def stamping_transport(url, profile):
+        n = int(url.split("page=")[1])
+        if n != 1:
+            return json.dumps({"products": []}).encode()
+        ts = f"2026-08-26T13:00:{next(stamp):02d}Z"
+        items = [product(1), product(2)]
+        for item in items:
+            item["updated_at"] = ts
+        return json.dumps({"products": items}).encode()
+
+    mk = lambda: PoliteFetcher(tmp_path / "cache", SV, delay=0.0,
+                               transport=stamping_transport, clock=FakeClock())
+    art = tmp_path / "artifacts"
+    data = tmp_path / "data"
+    first = ingest("shop.test", data, run_id="r1", profile=SV, artifacts_dir=art,
+                   fetcher=mk(), now="2026-08-01T00:00:00Z", attempt_id="a1")
+    second = ingest("shop.test", data, run_id="r2", profile=SV, artifacts_dir=art,
+                    fetcher=mk(), now="2026-08-02T00:00:00Z", attempt_id="a2")
+
+    assert first.report.new == 2
+    assert (second.report.new, second.report.source_changed,
+            second.report.enrichment_stale, second.report.enrichment_jobs) == (0, 0, 0, 0)
+
+    conn = open_store(data / "shop.test" / "catalog.db")
+    assert conn.execute("SELECT COUNT(*) FROM product_version").fetchone()[0] == 2
+    # the response-stamped value is still stored verbatim, just excluded from the hash
+    rows = conn.execute("SELECT payload FROM product_version").fetchall()
+    assert all(json.loads(r[0])["source_payload"]["updated_at"] for r in rows)
+
+
 def test_successful_run_id_is_immutable(tmp_path):
     items = [product(1)]
     f = PoliteFetcher(tmp_path / "cache", SV, delay=0.0,
@@ -157,6 +195,35 @@ def test_failed_artifact_write_does_not_advance_the_store(tmp_path):
     conn = open_store(data / "shop.test" / "catalog.db")
     assert current_live_count(conn) == 0
     assert conn.execute("SELECT COUNT(*) FROM product_version").fetchone()[0] == 0
+
+
+def test_manifest_write_failure_removes_orphan_snapshot_and_stays_retryable(tmp_path):
+    """The manifest write is the second of the two artifact writes. If it fails, the
+    snapshot written moments earlier must not survive to block a retry of this run id."""
+    art = tmp_path / "artifacts"
+    data = tmp_path / "data"
+    art.mkdir()
+    # Sabotage: the manifest's parent directory can never be created, since a
+    # regular file already sits where that directory needs to go.
+    (art / "shop.test").write_text("not a directory")
+
+    f = PoliteFetcher(tmp_path / "cache", SV, delay=0.0,
+                      transport=transport_for([product(1), product(2)]), clock=FakeClock())
+    with pytest.raises(FileExistsError):
+        ingest("shop.test", data, "r1", SV, artifacts_dir=art, fetcher=f,
+               now="2026-08-01T00:00:00Z", attempt_id="a1")
+
+    snapshot_path = data / "shop.test" / "snapshot-r1.jsonl"
+    assert not snapshot_path.exists()
+
+    # Un-sabotage and retry the same run id: no orphan snapshot blocks it.
+    (art / "shop.test").unlink()
+    stable = PoliteFetcher(tmp_path / "cache", SV, delay=0.0,
+                           transport=transport_for([product(1), product(2)]),
+                           clock=FakeClock())
+    result = ingest("shop.test", data, "r1", SV, artifacts_dir=art, fetcher=stable,
+                    now="2026-08-02T00:00:00Z", attempt_id="a2")
+    assert result.manifest["count"] == 2
 
 
 def test_write_new_removes_partial_file_on_write_failure(tmp_path, monkeypatch):

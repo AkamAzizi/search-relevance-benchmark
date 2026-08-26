@@ -13,6 +13,8 @@ ENRICHMENT_FIELDS = (
 def normalize(raw: dict) -> dict:
     # Retain every field the endpoint exposed. Only tag order is canonicalised because
     # Shopify tag order is not semantic and otherwise manufactures versions.
+    # source_payload is therefore canonicalised, not a verbatim copy: tag order is
+    # sorted, and a raw payload with no `tags` key at all gains one (`tags: []`).
     source_payload = deepcopy(raw)
     source_payload["tags"] = sorted(source_payload.get("tags") or [])
     variants = raw.get("variants") or []
