@@ -79,3 +79,14 @@ def test_max_pages_guard_stops_a_runaway_crawl(tmp_path):
     f = PoliteFetcher(tmp_path, SV, delay=0.0, transport=endless, clock=FakeClock())
     with pytest.raises(InconsistentCrawl, match="max_pages"):
         crawl_once(f, "shop.test", namespace="run-1", max_pages=3)
+
+
+def test_element_malformed_product_is_rejected_before_cache(tmp_path):
+    f = PoliteFetcher(
+        tmp_path, SV, delay=0.0,
+        transport=lambda url, profile: b'{"products": [{"title": "no id here"}]}',
+        clock=FakeClock(),
+    )
+    with pytest.raises(InconsistentCrawl, match="product element"):
+        crawl_once(f, "shop.test", namespace="run-1")
+    assert list(tmp_path.glob("*.bin")) == []

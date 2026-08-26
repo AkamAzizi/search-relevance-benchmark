@@ -20,6 +20,9 @@ def _decode_products(body: bytes) -> list[dict]:
     products = payload.get("products") if isinstance(payload, dict) else None
     if not isinstance(products, list):
         raise InconsistentCrawl("response does not contain a products list")
+    for product in products:
+        if not isinstance(product, dict) or "id" not in product:
+            raise InconsistentCrawl("product element is not a dict with an id field")
     return products
 
 
