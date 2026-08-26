@@ -50,7 +50,8 @@ Hard criteria, checked in this order:
 
 1. Queryable search endpoint (cannot be worked around — check first)
 2. >= ~1,000 products
-3. Multi-brand (vocabulary diversity)
+3. Multi-brand for the anchor and storefront 2 (vocabulary diversity). Storefront 3 is an
+   intentional single-brand transfer contrast and is exempt from this criterion.
 4. **Native storefront search, no third-party overlay** — so the baseline IS the shopper-facing system
 5. Not a Depict customer (anchor only)
 6. Commercially stable — will not change owner or platform mid-project
@@ -62,16 +63,22 @@ comparison" failure: an honest mistake that reads as dishonesty.
 
 | Role | Store | Products | Vendors | Catalog language | Search | Scored by |
 |---|---|---|---|---|---|---|
-| **Anchor** | **zoovillage.com** | ~2,000-2,250 | 31 | Swedish descriptions, English titles | native Shopify | **human labels** |
+| **Anchor** | **zoovillage.com** | 2,066 | 31 | Swedish descriptions, English titles | native Shopify | **human labels** |
 | **Storefront 2** | **rezetstore.dk** | >1,250 | 33 | English | native Shopify | calibrated proxy |
 | **Storefront 3** | **galvingreen.com** | >1,000 | 1 | English | native Shopify | calibrated proxy |
+
+Galvin Green's single-brand catalog is deliberate rather than a failed hard criterion. The
+anchor and storefront 2 test vocabulary diversity across brands; storefront 3 tests whether
+the proxy-calibrated pipeline transfers to a structurally different single-brand catalog.
+Its result remains descriptive and is never compared as though the catalog were matched.
 
 Only the anchor is hand-labeled. Storefronts 2 and 3 exist to test whether the findings
 transfer, and are scored by proxy — which happens only if the proxy first clears the
 pre-registered agreement threshold in 6.4. If it does not, both are cut and the project
 reports the anchor alone.
 
-Both pass all six criteria. Overlay checks: Zoovillage loads Klaviyo (email) and Pertento
+Zoovillage and Rezet pass the multi-brand selection criterion; Galvin Green carries the
+documented storefront-3 exception. Overlay checks: Zoovillage loads Klaviyo (email) and Pertento
 (A/B testing) but no search vendor; Rezet loads Klaviyo only. Both server-render results
 from `action="/search"`. An apparent Constructor.io hit on Zoovillage was a false positive —
 JavaScript `constructor()` declarations in Shopify web components — and was discarded after
@@ -182,8 +189,17 @@ Shopify `products.json?limit=250&page=N`, paced 3s, every response cached by URL
 State keyed on `product_id`, carrying `first_seen`, `last_seen`, `deleted_at`, and **two
 distinct hashes** rather than one:
 
-- `source_payload_hash` — the complete source record, price and inventory included. Drives
-  version history, so nothing the source sent is silently discarded.
+- `source_payload_hash` — the retrievable source record, price and inventory included.
+  Drives version history, so nothing the source sent is silently discarded, with one
+  exclusion: `updated_at` is excluded from the hash but retained verbatim in the stored
+  payload, because some storefronts (the anchor among them, observed 2026-08-26) stamp it
+  with the response time rather than the edit time — hashing it would make crawl
+  verification impossible and manufacture a new version for every product on every run. The
+  real cost: Shopify also bumps `updated_at` for edits `products.json` does not otherwise
+  expose (metafields, SEO fields, inventory levels, collection membership), so those edits
+  record no version row. That loses nothing *retrievable* — a change invisible in the catalog
+  payload cannot move a ranking — which is why this is the retrievable source record, not
+  the source record.
 - `enrichment_input_hash` — search-relevant fields only (title, body, tags, vendor,
   product_type, options, variant titles). Drives enrichment caching, so price churn does
   not re-pay for enrichment.
@@ -211,6 +227,12 @@ proves only that page 1 is stable; it says nothing about whether the crawl as a 
 consistent catalog. On mismatch, discard and re-crawl.
 
 **Imagery:** store URLs only. Never rehost.
+
+**Robots.txt:** checked for all three storefronts on 2026-08-26, one fetch each with the
+project User-Agent and no other requests made. None of the three declares a group matching
+our agent by name, so `User-agent: *` governs on all three, and on none of them does the `*`
+disallow list (checkout, cart, account, admin, filter/sort crawl traps, and similar)
+name `/products.json` — it is permitted on Zoovillage, Rezet Store and Galvin Green alike.
 
 ### 6.2 Enrichment into a controlled vocabulary
 *Claim: structured output beats prose, because filters need enums.*
@@ -515,7 +537,8 @@ outright: exact search is O(n), fine at 5,000 products and not at 500,000.
     eval/         query set, pooling, labeling tool, metrics, bootstrap
     service/      FastAPI + UI
     artifacts/    COMMITTED: query set + split, qrels, taxonomy, prompts, every
-                  RunSpec and RunArtifact, scorecard, model revisions, env lock
+                  RunSpec and RunArtifact, scorecard, model revisions, env lock,
+                  catalog manifests (one per crawl: digest, count, snapshot hash)
     data/         RETAINED PRIVATELY, git-ignored: raw catalog snapshot,
                   captured native responses
     docs/         methodology, limitations, the writeup
@@ -531,6 +554,12 @@ Hence the split above. **Everything the project itself produces is committed** �
 and split, qrels, taxonomy, prompts, every `RunSpec` and `RunArtifact`, the scorecard,
 model revisions and the environment lock. That is enough to recompute every number in the
 table offline, with no network and no storefront access.
+
+A catalog manifest is also a committed hash of bytes that live outside git (the raw snapshot
+in `data/`), and it is not the mistake above repeated. It is offered as **provenance** — proof
+the anchor crawl saw exactly 2,066 products, checkable against a snapshot available on
+request — never as **reconstruction**, which is what this section rules out and is not what a
+manifest claims to provide.
 
 **The raw catalog snapshot and captured native responses are retained but not
 republished**, because they are the merchant's data and invariant 7 governs them. The
@@ -575,8 +604,6 @@ the work could be sent as-is.
 
 ## 10. Open questions
 
-- Exact anchor catalog size: bounded to 2,000-2,250 by probing; the real figure comes from
-  the first full ingest.
-
-All other open questions are closed. Storefronts are selected and verified, the labeling
-scope is fixed to the anchor alone, and the public demo carries no product imagery.
+All open questions are closed. The exact anchor catalog size is 2,066 (confirmed by ingest,
+2026-08-26), storefronts are selected and verified, the labeling scope is fixed to the
+anchor alone, and the public demo carries no product imagery.

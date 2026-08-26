@@ -1,0 +1,14 @@
+{
+  "attempt_id": "547476f022294d90bf89760fbf1df4a2",
+  "count": 1365,
+  "crawled_at": "2026-08-26T13:22:13.976873+00:00",
+  "digest": "e85bc866d2d94d8163a8db907491d9e252ed533f9c0bb33a6a6e065ed48d8fe8",
+  "domain": "galvingreen.com",
+  "request_profile": {
+    "accept_language": "en-GB,en;q=0.9",
+    "locale": "en"
+  },
+  "run_id": "sf3-001",
+  "schema_version": 1,
+  "snapshot_sha256": "0db2baf49cac50b5bc6818e172536d6354847c60460af7a6233f1449115db8bc"
+}
