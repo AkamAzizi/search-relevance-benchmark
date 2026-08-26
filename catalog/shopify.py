@@ -1,6 +1,7 @@
 """Walk Shopify's public products.json and prove the crawl was self-consistent."""
 import hashlib
 import json
+import math
 from collections import Counter
 
 from catalog.record import normalize, source_payload_hash
@@ -58,3 +59,46 @@ def build_manifest(records: list[dict]) -> dict:
         "count": len(ids),
         "digest": hashlib.sha256(joined.encode()).hexdigest(),
     }
+
+
+def crawl_verified(fetcher, domain: str, attempt_id: str, max_pages: int = 60,
+                   minimum_count: int = 1, previous_count: int | None = None,
+                   max_drop_fraction: float = 0.10,
+                   allow_large_drop: bool = False) -> tuple[list[dict], dict]:
+    """Crawl twice and require both manifests to agree.
+
+    Page-based pagination is unstable under concurrent catalog edits and the public
+    endpoint offers no `since_id`, so consistency is detected rather than prevented.
+    A crawl that cannot prove consistency must not become a benchmark.
+    """
+    first = crawl_once(
+        fetcher, domain, namespace=f"{attempt_id}-a", max_pages=max_pages
+    )
+    first_manifest = build_manifest(first)
+
+    second = crawl_once(
+        fetcher, domain, namespace=f"{attempt_id}-b", max_pages=max_pages
+    )
+    second_manifest = build_manifest(second)
+
+    if first_manifest["digest"] != second_manifest["digest"]:
+        raise InconsistentCrawl(
+            f"{domain}: catalog changed between crawls "
+            f"({first_manifest['count']} then {second_manifest['count']} products). "
+            f"Discard and re-crawl."
+        )
+    count = second_manifest["count"]
+    if count < minimum_count:
+        raise InconsistentCrawl(
+            f"{domain}: count={count} is below minimum_count={minimum_count}; "
+            "discard before sync"
+        )
+    if previous_count is not None and previous_count > 0 and not allow_large_drop:
+        minimum_from_previous = math.ceil(previous_count * (1 - max_drop_fraction))
+        if count < minimum_from_previous:
+            raise InconsistentCrawl(
+                f"{domain}: large catalog drop from {previous_count} to {count}; "
+                f"maximum accepted fraction is {max_drop_fraction:.0%}. "
+                "Investigate or pass the explicit large-drop override."
+            )
+    return second, second_manifest

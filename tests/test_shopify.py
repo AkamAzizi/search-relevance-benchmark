@@ -1,7 +1,7 @@
 import json
 import pytest
 from catalog.fetch import PoliteFetcher, RequestProfile
-from catalog.shopify import crawl_once, build_manifest, InconsistentCrawl
+from catalog.shopify import crawl_once, build_manifest, InconsistentCrawl, crawl_verified
 
 SV = RequestProfile("sv-SE", "sv-SE,sv;q=0.9,en;q=0.5")
 
@@ -90,3 +90,69 @@ def test_element_malformed_product_is_rejected_before_cache(tmp_path):
     with pytest.raises(InconsistentCrawl, match="product element"):
         crawl_once(f, "shop.test", namespace="run-1")
     assert list(tmp_path.glob("*.bin")) == []
+
+
+def test_verified_crawl_accepts_two_matching_crawls(tmp_path):
+    pages = {1: [product(1), product(2)], 2: []}
+    f = PoliteFetcher(tmp_path, SV, delay=0.0,
+                      transport=pages_transport(pages), clock=FakeClock())
+    records, manifest = crawl_verified(f, "shop.test", attempt_id="a1")
+    assert manifest["count"] == 2
+    assert [r["product_id"] for r in records] == ["1", "2"]
+
+
+def test_verified_crawl_rejects_a_catalog_that_changed_mid_run(tmp_path):
+    state = {"calls": 0}
+    def shifting_transport(url, profile):
+        n = int(url.split("page=")[1])
+        if n != 1:
+            return json.dumps({"products": []}).encode()
+        state["calls"] += 1
+        # a product appears between the first and second crawl
+        items = [product(1)] if state["calls"] == 1 else [product(1), product(2)]
+        return json.dumps({"products": items}).encode()
+
+    f = PoliteFetcher(tmp_path, SV, delay=0.0,
+                      transport=shifting_transport, clock=FakeClock())
+    with pytest.raises(InconsistentCrawl, match="changed between crawls"):
+        crawl_verified(f, "shop.test", attempt_id="a1")
+
+
+def test_verification_crawls_use_different_cache_namespaces(tmp_path):
+    seen = []
+    def counting_transport(url, profile):
+        seen.append(url)
+        n = int(url.split("page=")[1])
+        return json.dumps({"products": [product(1)] if n == 1 else []}).encode()
+    f = PoliteFetcher(tmp_path, SV, delay=0.0,
+                      transport=counting_transport, clock=FakeClock())
+    crawl_verified(f, "shop.test", attempt_id="a1")
+    # page 1 and page 2 fetched twice - once per verification crawl, not served from cache
+    assert len(seen) == 4
+
+
+def test_verified_crawl_rejects_two_matching_empty_crawls(tmp_path):
+    f = PoliteFetcher(tmp_path, SV, delay=0.0,
+                      transport=pages_transport({1: []}), clock=FakeClock())
+    with pytest.raises(InconsistentCrawl, match="minimum_count=1"):
+        crawl_verified(f, "shop.test", attempt_id="a1")
+
+
+def test_verified_crawl_rejects_suspicious_drop_before_sync(tmp_path):
+    pages = {1: [product(1), product(2)], 2: []}
+    f = PoliteFetcher(tmp_path, SV, delay=0.0,
+                      transport=pages_transport(pages), clock=FakeClock())
+    with pytest.raises(InconsistentCrawl, match="large catalog drop"):
+        crawl_verified(f, "shop.test", attempt_id="a1", previous_count=10,
+                       max_drop_fraction=0.10)
+
+
+def test_large_drop_requires_explicit_override(tmp_path):
+    pages = {1: [product(1), product(2)], 2: []}
+    f = PoliteFetcher(tmp_path, SV, delay=0.0,
+                      transport=pages_transport(pages), clock=FakeClock())
+    records, manifest = crawl_verified(
+        f, "shop.test", attempt_id="a1", previous_count=10,
+        max_drop_fraction=0.10, allow_large_drop=True,
+    )
+    assert len(records) == manifest["count"] == 2
