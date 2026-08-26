@@ -1,0 +1,14 @@
+{
+  "attempt_id": "939ca8e76e13442dbd449ea0722bdbc3",
+  "count": 2066,
+  "crawled_at": "2026-08-26T13:18:16.251129+00:00",
+  "digest": "42a4a20ec5a386d81fbc6e9d5acbb96e0b9e702e0d0bcb5082db9235b402ca38",
+  "domain": "zoovillage.com",
+  "request_profile": {
+    "accept_language": "sv-SE,sv;q=0.9,en;q=0.5",
+    "locale": "sv-SE"
+  },
+  "run_id": "anchor-001",
+  "schema_version": 1,
+  "snapshot_sha256": "6e07da7ae58c166229f2999cbbcf1c27eebb3241b9ceb9a2e383caa467576a9e"
+}

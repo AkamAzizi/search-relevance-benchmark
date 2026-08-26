@@ -50,7 +50,8 @@ Hard criteria, checked in this order:
 
 1. Queryable search endpoint (cannot be worked around — check first)
 2. >= ~1,000 products
-3. Multi-brand (vocabulary diversity)
+3. Multi-brand for the anchor and storefront 2 (vocabulary diversity). Storefront 3 is an
+   intentional single-brand transfer contrast and is exempt from this criterion.
 4. **Native storefront search, no third-party overlay** — so the baseline IS the shopper-facing system
 5. Not a Depict customer (anchor only)
 6. Commercially stable — will not change owner or platform mid-project
@@ -62,16 +63,22 @@ comparison" failure: an honest mistake that reads as dishonesty.
 
 | Role | Store | Products | Vendors | Catalog language | Search | Scored by |
 |---|---|---|---|---|---|---|
-| **Anchor** | **zoovillage.com** | ~2,000-2,250 | 31 | Swedish descriptions, English titles | native Shopify | **human labels** |
+| **Anchor** | **zoovillage.com** | 2,066 | 31 | Swedish descriptions, English titles | native Shopify | **human labels** |
 | **Storefront 2** | **rezetstore.dk** | >1,250 | 33 | English | native Shopify | calibrated proxy |
 | **Storefront 3** | **galvingreen.com** | >1,000 | 1 | English | native Shopify | calibrated proxy |
+
+Galvin Green's single-brand catalog is deliberate rather than a failed hard criterion. The
+anchor and storefront 2 test vocabulary diversity across brands; storefront 3 tests whether
+the proxy-calibrated pipeline transfers to a structurally different single-brand catalog.
+Its result remains descriptive and is never compared as though the catalog were matched.
 
 Only the anchor is hand-labeled. Storefronts 2 and 3 exist to test whether the findings
 transfer, and are scored by proxy — which happens only if the proxy first clears the
 pre-registered agreement threshold in 6.4. If it does not, both are cut and the project
 reports the anchor alone.
 
-Both pass all six criteria. Overlay checks: Zoovillage loads Klaviyo (email) and Pertento
+Zoovillage and Rezet pass the multi-brand selection criterion; Galvin Green carries the
+documented storefront-3 exception. Overlay checks: Zoovillage loads Klaviyo (email) and Pertento
 (A/B testing) but no search vendor; Rezet loads Klaviyo only. Both server-render results
 from `action="/search"`. An apparent Constructor.io hit on Zoovillage was a false positive —
 JavaScript `constructor()` declarations in Shopify web components — and was discarded after
@@ -182,8 +189,12 @@ Shopify `products.json?limit=250&page=N`, paced 3s, every response cached by URL
 State keyed on `product_id`, carrying `first_seen`, `last_seen`, `deleted_at`, and **two
 distinct hashes** rather than one:
 
-- `source_payload_hash` — the complete source record, price and inventory included. Drives
-  version history, so nothing the source sent is silently discarded.
+- `source_payload_hash` — the source record, price and inventory included, but excluding
+  `updated_at`. Drives version history, so nothing the source sent is silently discarded.
+  `updated_at` is excluded from the hash — though still retained verbatim in the stored
+  payload — because some storefronts (the anchor among them, observed 2026-08-26) stamp it
+  with the response time rather than the edit time, so hashing it would make crawl
+  verification impossible and would manufacture a new version for every product on every run.
 - `enrichment_input_hash` — search-relevant fields only (title, body, tags, vendor,
   product_type, options, variant titles). Drives enrichment caching, so price churn does
   not re-pay for enrichment.
@@ -575,8 +586,6 @@ the work could be sent as-is.
 
 ## 10. Open questions
 
-- Exact anchor catalog size: bounded to 2,000-2,250 by probing; the real figure comes from
-  the first full ingest.
-
-All other open questions are closed. Storefronts are selected and verified, the labeling
-scope is fixed to the anchor alone, and the public demo carries no product imagery.
+All open questions are closed. The exact anchor catalog size is 2,066 (confirmed by ingest,
+2026-08-26), storefronts are selected and verified, the labeling scope is fixed to the
+anchor alone, and the public demo carries no product imagery.
