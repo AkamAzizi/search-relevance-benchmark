@@ -5,8 +5,27 @@ requires-python = ">=3.13"
 dependencies = []
 
 [dependency-groups]
-dev = ["pytest>=8.0"]
+dev = [
+    "pip-audit>=2.10.1",
+    "pytest>=8.0",
+    "ruff>=0.16.4",
+    "ty>=0.0.74",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py313"
+src = ["catalog", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["E702", "E731"]
+
+[tool.ty.src]
+include = ["catalog"]
