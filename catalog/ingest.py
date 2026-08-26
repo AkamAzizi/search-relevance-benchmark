@@ -31,12 +31,20 @@ class IngestResult:
 def _write_new(path: Path, payload: bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
-        with path.open("xb") as handle:
+        handle = path.open("xb")
+    except FileExistsError as exc:
+        raise ArtifactExists(f"artifact already exists for run {path.stem}") from exc
+    try:
+        with handle:
             handle.write(payload)
             handle.flush()
             os.fsync(handle.fileno())
-    except FileExistsError as exc:
-        raise ArtifactExists(f"artifact already exists for run {path.stem}") from exc
+    except Exception:
+        # Unlike a killed process, an exception that unwinds normally leaves a
+        # traceback as evidence, so the truncated file underneath adds nothing
+        # except making ArtifactExists lie about this run having succeeded.
+        path.unlink(missing_ok=True)
+        raise
 
 
 def ingest(domain: str, data_dir: Path, run_id: str, profile: RequestProfile,
@@ -69,7 +77,6 @@ def ingest(domain: str, data_dir: Path, run_id: str, profile: RequestProfile,
         previous_count=previous_count, max_drop_fraction=max_drop_fraction,
         allow_large_drop=allow_large_drop,
     )
-    report = sync(conn, records, now=now)
 
     snapshot_bytes = "".join(
         json.dumps(rec, ensure_ascii=False, sort_keys=True) + "\n"
@@ -87,9 +94,11 @@ def ingest(domain: str, data_dir: Path, run_id: str, profile: RequestProfile,
     manifest_bytes = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode()
 
     # Exclusive creation makes run IDs immutable. Interrupted partial files are evidence to
-    # inspect, not objects to overwrite silently.
+    # inspect, not objects to overwrite silently. Both artifacts land before sync() commits,
+    # so a write failure here never leaves the store durably ahead of what's on disk.
     _write_new(snapshot_path, snapshot_bytes)
     _write_new(manifest_path, manifest_bytes)
+    report = sync(conn, records, now=now)
     return IngestResult(domain, run_id, manifest, report, snapshot_path, manifest_path)
 
 

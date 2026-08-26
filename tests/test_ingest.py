@@ -137,3 +137,38 @@ def test_rejected_large_drop_does_not_mutate_store(tmp_path):
         ingest("shop.test", data, "r2", SV, artifacts_dir=art, fetcher=second,
                now="2026-08-02T00:00:00Z", attempt_id="a2")
     assert current_live_count(open_store(data / "shop.test" / "catalog.db")) == 10
+
+
+def test_failed_artifact_write_does_not_advance_the_store(tmp_path):
+    """sync() must run after both artifacts are durably on disk, not before."""
+    art = tmp_path / "artifacts"
+    data = tmp_path / "data"
+    art.mkdir()
+    # Sabotage: the manifest's parent directory can never be created, since a
+    # regular file already sits where that directory needs to go.
+    (art / "shop.test").write_text("not a directory")
+
+    f = PoliteFetcher(tmp_path / "cache", SV, delay=0.0,
+                      transport=transport_for([product(1), product(2)]), clock=FakeClock())
+    with pytest.raises(FileExistsError):
+        ingest("shop.test", data, "r1", SV, artifacts_dir=art, fetcher=f,
+               now="2026-08-01T00:00:00Z", attempt_id="a1")
+
+    conn = open_store(data / "shop.test" / "catalog.db")
+    assert current_live_count(conn) == 0
+    assert conn.execute("SELECT COUNT(*) FROM product_version").fetchone()[0] == 0
+
+
+def test_write_new_removes_partial_file_on_write_failure(tmp_path, monkeypatch):
+    import catalog.ingest as ingest_module
+
+    def boom(fd):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(ingest_module.os, "fsync", boom)
+    path = tmp_path / "sub" / "snapshot-r1.jsonl"
+
+    with pytest.raises(OSError):
+        ingest_module._write_new(path, b"payload")
+
+    assert not path.exists()
