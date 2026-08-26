@@ -86,65 +86,65 @@ def _enqueue(conn, pid, eih, rec, now) -> bool:
 
 
 def sync(conn: sqlite3.Connection, records: list[dict], now: str) -> SyncReport:
-    report = SyncReport()
-    seen: set[str] = set()
+    with conn:
+        report = SyncReport()
+        seen: set[str] = set()
 
-    for rec in records:
-        pid = rec["product_id"]
-        seen.add(pid)
-        sph, eih = source_payload_hash(rec), enrichment_input_hash(rec)
+        for rec in records:
+            pid = rec["product_id"]
+            seen.add(pid)
+            sph, eih = source_payload_hash(rec), enrichment_input_hash(rec)
 
-        state = conn.execute(
-            "SELECT current_version FROM product_state WHERE product_id=?", (pid,)
-        ).fetchone()
+            state = conn.execute(
+                "SELECT current_version FROM product_state WHERE product_id=?", (pid,)
+            ).fetchone()
 
-        if state is None:
-            _write_version(conn, pid, 1, sph, eih, rec, now)
+            if state is None:
+                _write_version(conn, pid, 1, sph, eih, rec, now)
+                conn.execute(
+                    "INSERT INTO product_state VALUES (?,?,?,?,NULL)", (pid, 1, now, now)
+                )
+                report.new += 1
+                report.enrichment_jobs += int(_enqueue(conn, pid, eih, rec, now))
+                continue
+
+            current = conn.execute(
+                "SELECT source_payload_hash, enrichment_input_hash "
+                "FROM product_version WHERE product_id=? AND version=?",
+                (pid, state[0]),
+            ).fetchone()
+
+            if current[0] == sph and current[1] == eih:
+                conn.execute(
+                    "UPDATE product_state SET last_seen=?, deleted_at=NULL WHERE product_id=?",
+                    (now, pid),
+                )
+                report.unchanged += 1
+                continue
+
+            version = state[0] + 1
+            _write_version(conn, pid, version, sph, eih, rec, now)
             conn.execute(
-                "INSERT INTO product_state VALUES (?,?,?,?,NULL)", (pid, 1, now, now)
+                "UPDATE product_state SET current_version=?, last_seen=?, deleted_at=NULL "
+                "WHERE product_id=?",
+                (version, now, pid),
             )
-            report.new += 1
-            report.enrichment_jobs += int(_enqueue(conn, pid, eih, rec, now))
-            continue
+            if current[1] != eih:
+                report.enrichment_stale += 1
+                report.enrichment_jobs += int(_enqueue(conn, pid, eih, rec, now))
+            else:
+                report.source_changed += 1
 
-        current = conn.execute(
-            "SELECT source_payload_hash, enrichment_input_hash "
-            "FROM product_version WHERE product_id=? AND version=?",
-            (pid, state[0]),
-        ).fetchone()
+        live = conn.execute(
+            "SELECT product_id FROM product_state WHERE deleted_at IS NULL"
+        ).fetchall()
+        for (pid,) in live:
+            if pid not in seen:
+                conn.execute(
+                    "UPDATE product_state SET deleted_at=? WHERE product_id=?", (now, pid)
+                )
+                report.disappeared += 1
 
-        if current[0] == sph and current[1] == eih:
-            conn.execute(
-                "UPDATE product_state SET last_seen=?, deleted_at=NULL WHERE product_id=?",
-                (now, pid),
-            )
-            report.unchanged += 1
-            continue
-
-        version = state[0] + 1
-        _write_version(conn, pid, version, sph, eih, rec, now)
-        conn.execute(
-            "UPDATE product_state SET current_version=?, last_seen=?, deleted_at=NULL "
-            "WHERE product_id=?",
-            (version, now, pid),
-        )
-        if current[1] != eih:
-            report.enrichment_stale += 1
-            report.enrichment_jobs += int(_enqueue(conn, pid, eih, rec, now))
-        else:
-            report.source_changed += 1
-
-    live = conn.execute(
-        "SELECT product_id FROM product_state WHERE deleted_at IS NULL"
-    ).fetchall()
-    for (pid,) in live:
-        if pid not in seen:
-            conn.execute(
-                "UPDATE product_state SET deleted_at=? WHERE product_id=?", (now, pid)
-            )
-            report.disappeared += 1
-
-    conn.commit()
     return report
 
 

@@ -1,3 +1,7 @@
+import sqlite3
+
+import pytest
+
 from catalog.record import normalize
 from catalog.store import (complete_enrichment, current_live_count, open_store,
                            pending_enrichment, sync)
@@ -106,3 +110,41 @@ def test_reverting_after_completion_reuses_cached_enrichment(tmp_path):
     report = sync(conn, recs(raw(1, title="A")), now="2026-08-03T00:00:00Z")
     assert report.enrichment_jobs == 0
     assert pending_enrichment(conn) == []
+
+
+def test_sync_rolls_back_on_exception(tmp_path, monkeypatch):
+    """Verify that sync rolls back all writes if an exception occurs mid-batch.
+    Tests on a fresh connection to distinguish rollback from uncommitted transaction."""
+    conn = open_store(tmp_path / "s.db")
+    # First sync succeeds
+    sync(conn, recs(raw(1)), now="2026-08-01T00:00:00Z")
+
+    # Prepare a batch where we'll inject an error mid-process
+    from catalog import store
+    original_enqueue = store._enqueue
+    call_count = [0]
+
+    def failing_enqueue(conn_arg, pid, eih, rec, now):
+        call_count[0] += 1
+        if call_count[0] == 2:
+            raise RuntimeError("Simulated enrichment error")
+        return original_enqueue(conn_arg, pid, eih, rec, now)
+
+    monkeypatch.setattr(store, "_enqueue", failing_enqueue)
+
+    # Try to sync a batch that will fail partway through
+    with pytest.raises(RuntimeError, match="Simulated enrichment error"):
+        sync(conn, recs(raw(2), raw(3)), now="2026-08-02T00:00:00Z")
+
+    # Open a fresh connection to verify nothing was written from the failed batch
+    conn2 = sqlite3.connect(str(tmp_path / "s.db"))
+    count = conn2.execute(
+        "SELECT COUNT(*) FROM product_state WHERE product_id IN ('2', '3')"
+    ).fetchone()[0]
+    assert count == 0, "Failed batch should not be visible in fresh connection"
+    # Also verify product_version has no rows from pids 2 or 3
+    version_count = conn2.execute(
+        "SELECT COUNT(*) FROM product_version WHERE product_id IN ('2', '3')"
+    ).fetchone()[0]
+    assert version_count == 0, "Failed batch versions should not be visible"
+    conn2.close()
