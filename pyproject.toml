@@ -9,7 +9,7 @@ dev = [
     "pip-audit>=2.10.1",
     "pytest>=8.0",
     "ruff>=0.16.4",
-    "ty>=0.0.74",
+    "ty>=0.0.75",
 ]
 
 [tool.pytest.ini_options]
