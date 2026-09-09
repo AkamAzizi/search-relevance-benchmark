@@ -2,25 +2,36 @@
 
 A search engine that grades search engines.
 
-Point the system at a fashion storefront. Ingest its catalog, infer what each product
-actually is, build independent search over it, then run a fixed set of realistic shopper
-queries against both that search and the storefront's own. Publish a scorecard with the
-methodology attached.
-
 The output is a *measurement* — a number produced by a stated method comparing two systems
 on the same data — not a demo.
 
+**Public scorecard:** [Store A native vs BM25+Compound](site/index.html)
+(open that file; methodology is on the page).
+
+This is an independent methodology demonstration. It is not an official audit or
+endorsement of the retailer.
+
 Design: [`docs/superpowers/specs/2026-08-25-search-relevance-benchmark-design.md`](docs/superpowers/specs/2026-08-25-search-relevance-benchmark-design.md)
 
-## What is built so far
+## Result (Swedish fashion retailer A, snapshot `anchor-003`, 1,904 products)
 
-The catalog ingestion pipeline (spec section 6.1). Enrichment, retrieval, evaluation and
-the service are separate plans; this stage ends with a trustworthy, re-runnable snapshot
-and a queue of enrichment jobs waiting to be consumed.
+24 frozen queries, catalog-grounded grades, nDCG@10 on the 21 answerable queries.
 
-**The claim it exists to support:** run ingest twice back-to-back and get zero new product
-versions and zero enrichment jobs. Not zero database *updates* — an unchanged record
-legitimately touches `last_seen`.
+| System | nDCG@10 | P@10 (grade ≥ 2) | Results on absent queries |
+|---|---|---|---|
+| Store A native | **0.957** | 0.846 | 25 |
+| BM25+Compound | 0.926 | 0.825 | 0 |
+| BM25 | 0.811 | 0.708 | 0 |
+
+Native wins the headline, almost entirely on misspellings. Compound splitting is a
+real mechanism: on *jacka* / *skjorta* / *väska* BM25+Compound scores 1.000 against
+plain BM25 at 0.784. Query set hash: `777c230f5d94de28ada067bb66e0e9b9fad73f57f2bfab2801a0611e561c8381`.
+
+This is **not** the human-pooled, sealed test split in the spec. Grades come from
+merchant fields (vendor, product type, tags), committed with the queries, before
+any ranking ran. Brand and type queries are a retrieval ceiling: every match has
+the same grade, so nDCG@10 is 1.000 for any system that fills ten slots with
+relevant items.
 
 ## Quick start
 
@@ -29,71 +40,63 @@ the standard library and `curl`.
 
 ```bash
 uv sync
-uv run pytest                     # 62 tests
+uv run pytest
 ```
 
-Ingest a catalog:
+Ingest a catalog (crawls twice; pacing is 3s between live requests). The live host
+stays private:
 
 ```bash
 uv run python -m catalog.ingest \
-  --store zoovillage.com \
-  --run-id anchor-003 \
+  --store "$STORE_HOST" \
+  --run-id anchor-004 \
   --locale sv-SE \
   --accept-language 'sv-SE,sv;q=0.9,en;q=0.5' \
-  --minimum-count 2000
+  --minimum-count 1500
 ```
 
-This crawls the catalog **twice** and refuses to touch any state unless both crawls agree,
-so a run takes a few minutes of mostly waiting. That is the pacing working, not a hang.
+Score native search against BM25, writing `site/index.html`:
 
-Run it a second time with a fresh `--run-id` and it should report
-`new=0 source_changed=0 enrichment_stale=0 disappeared=0` and zero enrichment jobs.
+```bash
+uv run python -m eval.run \
+  --snapshot data/store-a/snapshot-anchor-003.jsonl \
+  --manifest artifacts/store-a/manifest-anchor-003.json \
+  --queries artifacts/queries/store-a-v1.json \
+  --out artifacts/store-a/scorecard-v1 \
+  --capture-native \
+  --host "$STORE_HOST"
+```
+
+`--capture-native` hits the live `/search` page once per query and caches the HTML.
+Re-running uses the cache. Native HTML stays in git-ignored `data/`; product ids and
+scores are committed under `artifacts/`. `--host` is required for capture and is
+never written to public artifacts.
 
 ## Layout
 
 | Path | What it is |
 |---|---|
-| `catalog/fetch.py` | Paced, disk-cached, locale-aware HTTP. Caches only *validated* bodies. |
-| `catalog/record.py` | Normalisation, and the two hashes the incremental design rests on. |
-| `catalog/shopify.py` | Paginated crawl, duplicate-id detection, whole-crawl verification. |
-| `catalog/store.py` | SQLite state and the five sync transitions. Soft-delete only. |
-| `catalog/ingest.py` | Orchestration, immutable run IDs, artifacts, and the CLI. |
-| `artifacts/` | Committed. Manifests: count, content digest, snapshot hash, request profile. |
-| `data/` | Git-ignored. Snapshots, response cache, SQLite. The catalog is theirs, not ours. |
-
-## Two design decisions worth knowing
-
-**Two hashes, never one.** `source_payload_hash` covers the source record and drives version
-history. `enrichment_input_hash` covers search-relevant fields only and drives enrichment
-caching — so a price change records a new version but never re-pays for enrichment. A single
-hash could not serve both purposes.
-
-**Consistency is detected, not prevented.** Page-based pagination is unstable under
-concurrent catalog edits and the public endpoint offers no `since_id`. So every crawl runs
-twice under different cache namespaces and the two content manifests must agree. Re-fetching
-page 1 proves only that page 1 is stable. A crawl that cannot prove it saw a consistent
-catalog does not become a benchmark.
+| `catalog/` | Polite ingest, two-hash sync, verified crawls. |
+| `engine/` | Fielded BM25 and Swedish fashion-head splitting. |
+| `eval/` | Frozen queries, catalog-grounded grades, nDCG, native capture, the page. |
+| `site/index.html` | The public scorecard (Store A). |
+| `artifacts/` | Committed. Manifests, query set, run specs, runs, scorecard. |
+| `data/` | Git-ignored. Snapshots, response cache, SQLite. The catalog is theirs. |
 
 ## Treating third parties well
-
-This is an invariant, not a preference. Violating it makes the project worthless rather
-than weaker.
 
 - Minimum 3.0 seconds between live requests. There is deliberately no CLI flag to lower it.
 - Every validated response is cached to disk; errors, malformed pages and bot challenges
   never enter the cache.
-- Image **URLs** are stored. No image is ever downloaded or rehosted.
+- Image **URLs** are stored. No image is ever downloaded, rehosted, or shown on the scorecard.
 - `robots.txt` was checked for every storefront before crawling.
 - Named comparisons are shared privately with the storefronts before publication.
+- The public scorecard does not name the retailer.
 
 ## Storefronts
 
-| Role | Store | Products | Scored by |
+| Role | Store | Products (this scorecard) | Scored by |
 |---|---|---|---|
-| Anchor | zoovillage.com | 2,066 | human labels |
-| Storefront 2 | rezetstore.dk | 1,973 | calibrated proxy |
-| Storefront 3 | galvingreen.com | 1,365 | calibrated proxy |
-
-Only the anchor is hand-labeled. Storefronts 2 and 3 test whether the findings transfer,
-and are scored by proxy only if that proxy first clears a pre-registered agreement
-threshold. If it does not, both are cut and the project reports the anchor alone.
+| Anchor | Store A | 1,904 (`anchor-003`) | catalog-grounded grades |
+| Storefront 2 | ingested, not scored here | — | — |
+| Storefront 3 | ingested, not scored here | — | — |

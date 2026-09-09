@@ -9,8 +9,11 @@ from pathlib import Path
 from typing import Callable
 
 USER_AGENT = "SearchEvalResearch/0.1 (+search-relevance benchmarking; polite, cached)"
-CHALLENGE_MARKERS = (
-    b"verifying your connection", b"cf-injected", b"attention required", b"captcha"
+INTERSTITIAL_MARKERS = (
+    b"verifying your connection",
+    b"cf-injected",
+    b"<title>attention required",
+    b"<title>just a moment",
 )
 
 
@@ -29,6 +32,12 @@ class Challenged(Exception):
 
 class FetchError(Exception):
     """The transport failed, returned an HTTP error, or returned nothing."""
+
+
+def is_challenge(body: bytes) -> bool:
+    """True for bot interstitials, not for storefront pages that load a captcha script."""
+    lowered = body.lower()
+    return any(marker in lowered for marker in INTERSTITIAL_MARKERS)
 
 
 def curl_transport(url: str, profile: RequestProfile) -> bytes:
@@ -74,8 +83,7 @@ class PoliteFetcher:
         self._last = self._clock.monotonic()
 
         body = self._transport(url, self.profile)
-        lowered = body.lower()
-        if any(marker in lowered for marker in CHALLENGE_MARKERS):
+        if is_challenge(body):
             raise Challenged(url)
         if not body:
             raise FetchError(url)

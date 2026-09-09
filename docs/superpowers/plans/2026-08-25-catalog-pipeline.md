@@ -17,7 +17,7 @@
 - **Imagery:** store image URLs only. Never download, never rehost.
 - **Two hashes, never one:** `source_payload_hash` (everything except `updated_at`) and `enrichment_input_hash` (search-relevant fields only).
 - **Soft-delete only.** A product absent from a crawl gets `deleted_at` set; its rows are never removed.
-- **Anchor store:** `zoovillage.com`, ~2,000-2,250 products, native Shopify search.
+- **Anchor store:** `store-a.example`, ~2,000-2,250 products, native Shopify search.
 - **Artifacts vs data:** `artifacts/` is committed; `data/` (raw snapshots, cache) is git-ignored.
 
 **Deviation from the spec, flagged rather than silent:** the spec's pipeline diagram names `catalog.parquet`. This plan emits JSONL instead. At ~2,250 products parquet buys nothing and costs a dependency, and JSONL is diffable and inspectable. If catalogs ever grow past ~100k this should be revisited.
@@ -1020,7 +1020,7 @@ def ingest(domain: str, data_dir: Path, run_id: str,
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Ingest a Shopify catalog, politely.")
-    parser.add_argument("--store", required=True, help="e.g. zoovillage.com")
+    parser.add_argument("--store", required=True, help="e.g. store-a.example")
     parser.add_argument("--data-dir", default="data")
     parser.add_argument("--artifacts-dir", default="artifacts")
     parser.add_argument("--run-id", default=datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ"))
@@ -1067,7 +1067,7 @@ git commit -m "feat(catalog): ingest orchestration with snapshot and manifest ar
 
 **Interfaces:**
 - Consumes: the CLI from Task 6.
-- Produces: a real snapshot of `zoovillage.com` and its committed manifest; the exact catalog size, which the spec currently records only as a 2,000-2,250 bound.
+- Produces: a real snapshot of `store-a.example` and its committed manifest; the exact catalog size, which the spec currently records only as a 2,000-2,250 bound.
 
 This is the first live run. It takes roughly 2 × 10 pages × 3s ≈ 60s plus latency, because verification crawls twice.
 
@@ -1075,7 +1075,7 @@ This is the first live run. It takes roughly 2 × 10 pages × 3s ≈ 60s plus la
 
 ```bash
 cd "/Users/akamazizi/Akam Azizi/rail"
-uv run python -m catalog.ingest --store zoovillage.com --run-id anchor-001
+uv run python -m catalog.ingest --store store-a.example --run-id anchor-001
 ```
 
 Expected: `products=` a number between 2000 and 2250; `new=` that same number; `enrichment jobs queued=` that same number.
@@ -1087,7 +1087,7 @@ If it raises `Challenged`, back off for several hours. Do not reduce the delay.
 - [ ] **Step 2: Verify idempotency against the live catalog**
 
 ```bash
-uv run python -m catalog.ingest --store zoovillage.com --run-id anchor-002
+uv run python -m catalog.ingest --store store-a.example --run-id anchor-002
 ```
 
 Expected: `new=0 source_changed=0 enrichment_stale=0 unchanged=<same count> disappeared=0`, and `enrichment jobs queued: 0`.
@@ -1096,7 +1096,7 @@ Small non-zero `source_changed` is plausible if prices moved between runs; `enri
 
 - [ ] **Step 3: Record the real catalog size in the spec**
 
-Update section 4's product count for `zoovillage.com` from `~2,000-2,250` to the exact figure, and remove the corresponding bullet from section 10 Open questions.
+Update section 4's product count for `store-a.example` from `~2,000-2,250` to the exact figure, and remove the corresponding bullet from section 10 Open questions.
 
 - [ ] **Step 4: Commit the manifest and the spec correction**
 
@@ -1120,10 +1120,10 @@ git add artifacts/ && git commit -m "chore(catalog): storefront 2 and 3 manifest
 The pipeline is done when all of these hold:
 
 1. `uv run pytest -v` — 30 passed.
-2. `uv run python -m catalog.ingest --store zoovillage.com --run-id vN` twice in succession reports `new=0`, `enrichment_stale=0`, `enrichment_jobs=0` on the second run. **This is the claim the component exists to support.**
-3. `data/zoovillage.com/snapshot-anchor-001.jsonl` has one line per product, sorted by id.
-4. `artifacts/zoovillage.com/manifest-anchor-001.json` is committed; `data/` is not.
-5. `sqlite3 data/zoovillage.com/catalog.db "SELECT COUNT(*) FROM product_state WHERE deleted_at IS NULL"` matches the manifest count.
+2. `uv run python -m catalog.ingest --store store-a.example --run-id vN` twice in succession reports `new=0`, `enrichment_stale=0`, `enrichment_jobs=0` on the second run. **This is the claim the component exists to support.**
+3. `data/store-a/snapshot-anchor-001.jsonl` has one line per product, sorted by id.
+4. `artifacts/store-a/manifest-anchor-001.json` is committed; `data/` is not.
+5. `sqlite3 data/store-a/catalog.db "SELECT COUNT(*) FROM product_state WHERE deleted_at IS NULL"` matches the manifest count.
 6. No image bytes anywhere under `data/` — only URLs inside the JSONL.
 
 ## Sequencing constraint discovered during review

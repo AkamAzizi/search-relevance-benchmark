@@ -38,6 +38,17 @@ def test_challenge_raises_and_is_never_cached(tmp_path):
     assert list(tmp_path.glob("*.bin")) == []
 
 
+def test_storefront_captcha_bootstrap_is_not_a_bot_challenge(tmp_path):
+    body = (
+        b"<html><title>Search</title><script id=\"captcha-bootstrap\">x</script>"
+        + b"product " * 2000
+    )
+    f = PoliteFetcher(tmp_path, SV, delay=0.0, transport=lambda u, p: body, clock=FakeClock())
+    assert f.get("https://x.test/search") == body
+    assert list(tmp_path.glob("*.bin"))
+
+
+
 def test_unfamiliar_html_is_rejected_by_validator_before_cache(tmp_path):
     f = PoliteFetcher(
         tmp_path, SV, delay=0.0,

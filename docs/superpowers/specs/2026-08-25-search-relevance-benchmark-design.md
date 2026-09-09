@@ -63,7 +63,7 @@ comparison" failure: an honest mistake that reads as dishonesty.
 
 | Role | Store | Products | Vendors | Catalog language | Search | Scored by |
 |---|---|---|---|---|---|---|
-| **Anchor** | **zoovillage.com** | 2,066 | 31 | Swedish descriptions, English titles | native Shopify | **human labels** |
+| **Anchor** | **store-a.example** | 2,066 | 31 | Swedish descriptions, English titles | native Shopify | **human labels** |
 | **Storefront 2** | **rezetstore.dk** | >1,250 | 33 | English | native Shopify | calibrated proxy |
 | **Storefront 3** | **galvingreen.com** | >1,000 | 1 | English | native Shopify | calibrated proxy |
 
@@ -77,14 +77,14 @@ transfer, and are scored by proxy — which happens only if the proxy first clea
 pre-registered agreement threshold in 6.4. If it does not, both are cut and the project
 reports the anchor alone.
 
-Zoovillage and Rezet pass the multi-brand selection criterion; Galvin Green carries the
-documented storefront-3 exception. Overlay checks: Zoovillage loads Klaviyo (email) and Pertento
+Store A and Rezet pass the multi-brand selection criterion; Galvin Green carries the
+documented storefront-3 exception. Overlay checks: Store A loads Klaviyo (email) and Pertento
 (A/B testing) but no search vendor; Rezet loads Klaviyo only. Both server-render results
-from `action="/search"`. An apparent Constructor.io hit on Zoovillage was a false positive —
+from `action="/search"`. An apparent Constructor.io hit on Store A was a false positive —
 JavaScript `constructor()` declarations in Shopify web components — and was discarded after
 checking for the real `cnstrc` fingerprint.
 
-**Zoovillage carries an unplanned bonus:** English product titles over Swedish
+**Store A carries an unplanned bonus:** English product titles over Swedish
 descriptions. The cross-language retrieval problem is therefore present *inside a single
 catalog*, giving the multilingual claim a matched-catalog control rather than one confounded
 across two storefronts. Its descriptions are also densely compounded — `bomberjacka`,
@@ -232,7 +232,7 @@ consistent catalog. On mismatch, discard and re-crawl.
 project User-Agent and no other requests made. None of the three declares a group matching
 our agent by name, so `User-agent: *` governs on all three, and on none of them does the `*`
 disallow list (checkout, cart, account, admin, filter/sort crawl traps, and similar)
-name `/products.json` — it is permitted on Zoovillage, Rezet Store and Galvin Green alike.
+name `/products.json` — it is permitted on Store A, Rezet Store and Galvin Green alike.
 
 ### 6.2 Enrichment into a controlled vocabulary
 *Claim: structured output beats prose, because filters need enums.*

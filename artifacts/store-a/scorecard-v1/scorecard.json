@@ -1,0 +1,1062 @@
+{
+  "generated_at": "2026-09-09T21:59:18.001929+00:00",
+  "store": "Store A",
+  "k": 10,
+  "snapshot": {
+    "run_id": "anchor-003",
+    "count": 1904,
+    "sha256": "63e75ce932f7850b6c026cd025597ede4da4d95d5aba8935fd54b40a28130187",
+    "digest": "7f966a1fdd1bfcd0021bf3218d63b772b5703119a20b6127f3396ceddce263d5"
+  },
+  "queries": {
+    "id": "store-a-v1",
+    "n": 24,
+    "sha256": "777c230f5d94de28ada067bb66e0e9b9fad73f57f2bfab2801a0611e561c8381",
+    "committed_at": "2026-09-09T21:40:00Z"
+  },
+  "overlap": {
+    "mapped": 445,
+    "unmapped": 0
+  },
+  "systems": {
+    "native": {
+      "ndcg": 0.8376948265077867,
+      "precision": 0.8458333333333333,
+      "answerable_ndcg": 0.9573655160088991,
+      "absent_returned": 25,
+      "by_stratum": {
+        "exact/brand": 1.0,
+        "category": 1.0,
+        "compound": 0.9755453593002134,
+        "attribute": 1.0,
+        "cross-language": 0.9681896059005242,
+        "misspelling": 1.0,
+        "adversarial/absent": 0.0,
+        "natural language": 0.7472201821617306
+      },
+      "label": "Store A native"
+    },
+    "bm25": {
+      "ndcg": 0.7099529818257851,
+      "precision": 0.7083333333333334,
+      "answerable_ndcg": 0.811374836372326,
+      "absent_returned": 0,
+      "by_stratum": {
+        "exact/brand": 1.0,
+        "category": 1.0,
+        "compound": 0.7843189008941593,
+        "attribute": 1.0,
+        "cross-language": 0.917890206846836,
+        "misspelling": 0.6447614941174287,
+        "adversarial/absent": 0.0,
+        "natural language": 0.18687048640261245
+      },
+      "label": "BM25"
+    },
+    "bm25-compound": {
+      "ndcg": 0.8100667013425034,
+      "precision": 0.825,
+      "answerable_ndcg": 0.9257905158200038,
+      "absent_returned": 0,
+      "by_stratum": {
+        "exact/brand": 1.0,
+        "category": 1.0,
+        "compound": 1.0,
+        "attribute": 1.0,
+        "cross-language": 0.8860798127473601,
+        "misspelling": 0.6447614941174287,
+        "adversarial/absent": 0.0,
+        "natural language": 0.7933060728301674
+      },
+      "label": "BM25+Compound"
+    }
+  },
+  "per_query": [
+    {
+      "system": "native",
+      "id": "q01",
+      "query": "Les Deux",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 106
+    },
+    {
+      "system": "native",
+      "id": "q02",
+      "query": "Carhartt WIP",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 84
+    },
+    {
+      "system": "native",
+      "id": "q03",
+      "query": "Fred Perry",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 55
+    },
+    {
+      "system": "native",
+      "id": "q04",
+      "query": "Filippa K",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 29
+    },
+    {
+      "system": "native",
+      "id": "q05",
+      "query": "jackor",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 135
+    },
+    {
+      "system": "native",
+      "id": "q06",
+      "query": "jeans",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 114
+    },
+    {
+      "system": "native",
+      "id": "q07",
+      "query": "väskor",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 106
+    },
+    {
+      "system": "native",
+      "id": "q08",
+      "query": "solglasögon",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 73
+    },
+    {
+      "system": "native",
+      "id": "q09",
+      "query": "jacka",
+      "stratum": "compound",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 167
+    },
+    {
+      "system": "native",
+      "id": "q10",
+      "query": "skjorta",
+      "stratum": "compound",
+      "ndcg": 0.92663607790064,
+      "precision": 0.9,
+      "returned": 20,
+      "relevant": 138
+    },
+    {
+      "system": "native",
+      "id": "q11",
+      "query": "väska",
+      "stratum": "compound",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 114
+    },
+    {
+      "system": "native",
+      "id": "q12",
+      "query": "ull",
+      "stratum": "attribute",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 81
+    },
+    {
+      "system": "native",
+      "id": "q13",
+      "query": "linne",
+      "stratum": "attribute",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 34
+    },
+    {
+      "system": "native",
+      "id": "q14",
+      "query": "skinn",
+      "stratum": "attribute",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 24
+    },
+    {
+      "system": "native",
+      "id": "q15",
+      "query": "jacket",
+      "stratum": "cross-language",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 167
+    },
+    {
+      "system": "native",
+      "id": "q16",
+      "query": "dress",
+      "stratum": "cross-language",
+      "ndcg": 0.9363792118010483,
+      "precision": 0.9,
+      "returned": 20,
+      "relevant": 34
+    },
+    {
+      "system": "native",
+      "id": "q17",
+      "query": "carhart",
+      "stratum": "misspelling",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 84
+    },
+    {
+      "system": "native",
+      "id": "q18",
+      "query": "filipa k",
+      "stratum": "misspelling",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 29
+    },
+    {
+      "system": "native",
+      "id": "q19",
+      "query": "iphone",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 8,
+      "relevant": 0
+    },
+    {
+      "system": "native",
+      "id": "q20",
+      "query": "lego",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 17,
+      "relevant": 0
+    },
+    {
+      "system": "native",
+      "id": "q21",
+      "query": "skidpjäxor",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 0
+    },
+    {
+      "system": "native",
+      "id": "q22",
+      "query": "svart skinnjacka",
+      "stratum": "natural language",
+      "ndcg": 0.7125523635307983,
+      "precision": 0.6,
+      "returned": 20,
+      "relevant": 135
+    },
+    {
+      "system": "native",
+      "id": "q23",
+      "query": "röd klänning",
+      "stratum": "natural language",
+      "ndcg": 0.9052116356304492,
+      "precision": 0.9,
+      "returned": 20,
+      "relevant": 34
+    },
+    {
+      "system": "native",
+      "id": "q24",
+      "query": "herrjeans",
+      "stratum": "natural language",
+      "ndcg": 0.6238965473239444,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 114
+    },
+    {
+      "system": "bm25",
+      "id": "q01",
+      "query": "Les Deux",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 106
+    },
+    {
+      "system": "bm25",
+      "id": "q02",
+      "query": "Carhartt WIP",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 84
+    },
+    {
+      "system": "bm25",
+      "id": "q03",
+      "query": "Fred Perry",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 55
+    },
+    {
+      "system": "bm25",
+      "id": "q04",
+      "query": "Filippa K",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 29
+    },
+    {
+      "system": "bm25",
+      "id": "q05",
+      "query": "jackor",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 135
+    },
+    {
+      "system": "bm25",
+      "id": "q06",
+      "query": "jeans",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 114
+    },
+    {
+      "system": "bm25",
+      "id": "q07",
+      "query": "väskor",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 106
+    },
+    {
+      "system": "bm25",
+      "id": "q08",
+      "query": "solglasögon",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 73
+    },
+    {
+      "system": "bm25",
+      "id": "q09",
+      "query": "jacka",
+      "stratum": "compound",
+      "ndcg": 0.7917063341896681,
+      "precision": 0.8,
+      "returned": 20,
+      "relevant": 167
+    },
+    {
+      "system": "bm25",
+      "id": "q10",
+      "query": "skjorta",
+      "stratum": "compound",
+      "ndcg": 0.8664852524325113,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 138
+    },
+    {
+      "system": "bm25",
+      "id": "q11",
+      "query": "väska",
+      "stratum": "compound",
+      "ndcg": 0.6947651160602988,
+      "precision": 0.8,
+      "returned": 20,
+      "relevant": 114
+    },
+    {
+      "system": "bm25",
+      "id": "q12",
+      "query": "ull",
+      "stratum": "attribute",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 81
+    },
+    {
+      "system": "bm25",
+      "id": "q13",
+      "query": "linne",
+      "stratum": "attribute",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 34
+    },
+    {
+      "system": "bm25",
+      "id": "q14",
+      "query": "skinn",
+      "stratum": "attribute",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 24
+    },
+    {
+      "system": "bm25",
+      "id": "q15",
+      "query": "jacket",
+      "stratum": "cross-language",
+      "ndcg": 0.9305687780632227,
+      "precision": 0.9,
+      "returned": 20,
+      "relevant": 167
+    },
+    {
+      "system": "bm25",
+      "id": "q16",
+      "query": "dress",
+      "stratum": "cross-language",
+      "ndcg": 0.9052116356304492,
+      "precision": 0.9,
+      "returned": 20,
+      "relevant": 34
+    },
+    {
+      "system": "bm25",
+      "id": "q17",
+      "query": "carhart",
+      "stratum": "misspelling",
+      "ndcg": 0.3589542101716347,
+      "precision": 0.2,
+      "returned": 2,
+      "relevant": 84
+    },
+    {
+      "system": "bm25",
+      "id": "q18",
+      "query": "filipa k",
+      "stratum": "misspelling",
+      "ndcg": 0.9305687780632227,
+      "precision": 0.9,
+      "returned": 20,
+      "relevant": 29
+    },
+    {
+      "system": "bm25",
+      "id": "q19",
+      "query": "iphone",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 0
+    },
+    {
+      "system": "bm25",
+      "id": "q20",
+      "query": "lego",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 0
+    },
+    {
+      "system": "bm25",
+      "id": "q21",
+      "query": "skidpjäxor",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 0
+    },
+    {
+      "system": "bm25",
+      "id": "q22",
+      "query": "svart skinnjacka",
+      "stratum": "natural language",
+      "ndcg": 0.22009176629808017,
+      "precision": 0.1,
+      "returned": 20,
+      "relevant": 135
+    },
+    {
+      "system": "bm25",
+      "id": "q23",
+      "query": "röd klänning",
+      "stratum": "natural language",
+      "ndcg": 0.34051969290975714,
+      "precision": 0.4,
+      "returned": 20,
+      "relevant": 34
+    },
+    {
+      "system": "bm25",
+      "id": "q24",
+      "query": "herrjeans",
+      "stratum": "natural language",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 114
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q01",
+      "query": "Les Deux",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 106
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q02",
+      "query": "Carhartt WIP",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 84
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q03",
+      "query": "Fred Perry",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 55
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q04",
+      "query": "Filippa K",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 29
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q05",
+      "query": "jackor",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 135
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q06",
+      "query": "jeans",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 114
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q07",
+      "query": "väskor",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 106
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q08",
+      "query": "solglasögon",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 73
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q09",
+      "query": "jacka",
+      "stratum": "compound",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 167
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q10",
+      "query": "skjorta",
+      "stratum": "compound",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 138
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q11",
+      "query": "väska",
+      "stratum": "compound",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 114
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q12",
+      "query": "ull",
+      "stratum": "attribute",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 81
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q13",
+      "query": "linne",
+      "stratum": "attribute",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 34
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q14",
+      "query": "skinn",
+      "stratum": "attribute",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 24
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q15",
+      "query": "jacket",
+      "stratum": "cross-language",
+      "ndcg": 0.866947989864271,
+      "precision": 0.8,
+      "returned": 20,
+      "relevant": 167
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q16",
+      "query": "dress",
+      "stratum": "cross-language",
+      "ndcg": 0.9052116356304492,
+      "precision": 0.9,
+      "returned": 20,
+      "relevant": 34
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q17",
+      "query": "carhart",
+      "stratum": "misspelling",
+      "ndcg": 0.3589542101716347,
+      "precision": 0.2,
+      "returned": 2,
+      "relevant": 84
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q18",
+      "query": "filipa k",
+      "stratum": "misspelling",
+      "ndcg": 0.9305687780632227,
+      "precision": 0.9,
+      "returned": 20,
+      "relevant": 29
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q19",
+      "query": "iphone",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 0
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q20",
+      "query": "lego",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 0
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q21",
+      "query": "skidpjäxor",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 0
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q22",
+      "query": "svart skinnjacka",
+      "stratum": "natural language",
+      "ndcg": 0.9513467899190737,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 135
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q23",
+      "query": "röd klänning",
+      "stratum": "natural language",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 34
+    },
+    {
+      "system": "bm25-compound",
+      "id": "q24",
+      "query": "herrjeans",
+      "stratum": "natural language",
+      "ndcg": 0.4285714285714286,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 114
+    }
+  ],
+  "examples": [
+    {
+      "id": "q01",
+      "query": "Les Deux",
+      "native": [
+        {
+          "product_id": "15517301113164",
+          "title": "Ballier Casual Track Pants - 100 Black",
+          "grade": 3
+        },
+        {
+          "product_id": "15435929715020",
+          "title": "Core Contrast Hoodie - Black",
+          "grade": 3
+        },
+        {
+          "product_id": "15670221766988",
+          "title": "Core Contrast T-Shirt - Light Sand",
+          "grade": 3
+        },
+        {
+          "product_id": "9283115581772",
+          "title": "Piece Sweatshirt 2.0 - Navy",
+          "grade": 3
+        },
+        {
+          "product_id": "15670221209932",
+          "title": "Core Contrast T-Shirt - Green Spruce",
+          "grade": 3
+        },
+        {
+          "product_id": "15086870462796",
+          "title": "Nørregaard Tonal Sweatshirt - Dark Navy",
+          "grade": 3
+        },
+        {
+          "product_id": "15670221242700",
+          "title": "Core Contrast T-Shirt - Iris Purple",
+          "grade": 3
+        },
+        {
+          "product_id": "15517298852172",
+          "title": "Ballier Crew Jacket - Light Sand",
+          "grade": 3
+        },
+        {
+          "product_id": "9283116171596",
+          "title": "Piece 2.0 T-Shirt - Mountain Grey Melange/Posy Green/Pine Green",
+          "grade": 3
+        },
+        {
+          "product_id": "15086867546444",
+          "title": "Nørregaard Tonal T-Shirt - Black",
+          "grade": 3
+        }
+      ],
+      "mine": [
+        {
+          "product_id": "9283134259532",
+          "title": "Baseball Cap Suede II - Navy",
+          "grade": 3
+        },
+        {
+          "product_id": "9283115417932",
+          "title": "Greyson Half-Zip Merino Knit - Black",
+          "grade": 3
+        },
+        {
+          "product_id": "9283115581772",
+          "title": "Piece Sweatshirt 2.0 - Navy",
+          "grade": 3
+        },
+        {
+          "product_id": "9283133735244",
+          "title": "Nørregaard T-Shirt - Red",
+          "grade": 3
+        },
+        {
+          "product_id": "15086876623180",
+          "title": "Idris Padded Jacket - Black",
+          "grade": 3
+        },
+        {
+          "product_id": "15670221209932",
+          "title": "Core Contrast T-Shirt - Green Spruce",
+          "grade": 3
+        },
+        {
+          "product_id": "15670221242700",
+          "title": "Core Contrast T-Shirt - Iris Purple",
+          "grade": 3
+        },
+        {
+          "product_id": "15670221766988",
+          "title": "Core Contrast T-Shirt - Light Sand",
+          "grade": 3
+        },
+        {
+          "product_id": "15670221308236",
+          "title": "Exhibition Hoodie - Eggnog White",
+          "grade": 3
+        },
+        {
+          "product_id": "14943050006860",
+          "title": "Norregaard Contrast T-Shirt - Irish Cream",
+          "grade": 3
+        }
+      ]
+    },
+    {
+      "id": "q09",
+      "query": "jacka",
+      "native": [
+        {
+          "product_id": "15521807368524",
+          "title": "Kevin Poly Jacket - JL Navy",
+          "grade": 3
+        },
+        {
+          "product_id": "15717556748620",
+          "title": "MMJilly Miras Down Jacket - Doeskin",
+          "grade": 3
+        },
+        {
+          "product_id": "15521807401292",
+          "title": "Kevin Poly Jacket - Brindle",
+          "grade": 3
+        },
+        {
+          "product_id": "15521806942540",
+          "title": "Bailey Recy Poly Jacket - JL Navy",
+          "grade": 3
+        },
+        {
+          "product_id": "15025588011340",
+          "title": "Como Water Repellent Coat - Black",
+          "grade": 3
+        },
+        {
+          "product_id": "9284236607820",
+          "title": "Livigno Classico Jacket - Peyote",
+          "grade": 3
+        },
+        {
+          "product_id": "14950362120524",
+          "title": "OG Active Jacket - 894O Black",
+          "grade": 3
+        },
+        {
+          "product_id": "14951316947276",
+          "title": "Le Vrai 4.0 Claude Warm - 633 Green Oak",
+          "grade": 3
+        },
+        {
+          "product_id": "15521806844236",
+          "title": "Bailey Recy Poly Jacket - Brindle",
+          "grade": 3
+        },
+        {
+          "product_id": "14950361760076",
+          "title": "Brent Jacket - 89XX Black",
+          "grade": 3
+        }
+      ],
+      "mine": [
+        {
+          "product_id": "9284667539788",
+          "title": "Joseph Tech Jacket - Black",
+          "grade": 3
+        },
+        {
+          "product_id": "14949876564300",
+          "title": "Samantha Jacket - Black",
+          "grade": 3
+        },
+        {
+          "product_id": "9283139764556",
+          "title": "Felix - Black",
+          "grade": 3
+        },
+        {
+          "product_id": "15344650617164",
+          "title": "Palle - Pistachio Shell",
+          "grade": 3
+        },
+        {
+          "product_id": "15990360539468",
+          "title": "Hayden - Olive",
+          "grade": 3
+        },
+        {
+          "product_id": "9313832010060",
+          "title": "Disa Distressed - Brown",
+          "grade": 3
+        },
+        {
+          "product_id": "15808049709388",
+          "title": "Solange Jacket - Ivory",
+          "grade": 3
+        },
+        {
+          "product_id": "15808049774924",
+          "title": "Solange Jacket - Coffee",
+          "grade": 3
+        },
+        {
+          "product_id": "9284752113996",
+          "title": "Lucie Boxy Mid - Black",
+          "grade": 3
+        },
+        {
+          "product_id": "15990360277324",
+          "title": "Curtis - Brown",
+          "grade": 3
+        }
+      ]
+    },
+    {
+      "id": "q19",
+      "query": "iphone",
+      "native": [
+        {
+          "product_id": "15910255133004",
+          "title": "Alpha Hood - Moonbeam",
+          "grade": 0
+        },
+        {
+          "product_id": "15613787406668",
+          "title": "Asher S/S Shirt - Pale Peach",
+          "grade": 0
+        },
+        {
+          "product_id": "15613787111756",
+          "title": "Nash Polo Knit - Black",
+          "grade": 0
+        },
+        {
+          "product_id": "15971170681164",
+          "title": "Latania Dress - Chocolate",
+          "grade": 0
+        },
+        {
+          "product_id": "15517216145740",
+          "title": "Tami Stripe Knit Maxi Dress - Watermelon",
+          "grade": 0
+        },
+        {
+          "product_id": "14905584812364",
+          "title": "Akino Track Jacket - Black",
+          "grade": 0
+        },
+        {
+          "product_id": "15106528608588",
+          "title": "Stellan - Cobblestone",
+          "grade": 0
+        },
+        {
+          "product_id": "9386757685580",
+          "title": "Dani Relaxed Fit Jeans - Light Grey",
+          "grade": 0
+        }
+      ],
+      "mine": []
+    }
+  ],
+  "display_name": "Swedish fashion retailer A"
+}
