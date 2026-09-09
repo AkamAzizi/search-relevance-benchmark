@@ -28,7 +28,7 @@ jobs:
         run: uv sync --frozen --all-groups
 
       - name: Lint
-        run: uv run ruff check catalog tests
+        run: uv run ruff check catalog engine eval tests
 
       - name: Type check
         run: uv run ty check
@@ -37,7 +37,7 @@ jobs:
         run: uv run pytest
 
       - name: Compile
-        run: uv run python -m compileall -q catalog tests
+        run: uv run python -m compileall -q catalog engine eval tests
 
       - name: Security audit
         run: uv run pip-audit --progress-spinner off

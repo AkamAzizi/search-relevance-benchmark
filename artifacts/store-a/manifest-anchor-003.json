@@ -1,0 +1,14 @@
+{
+  "attempt_id": "18bb7394f7cb44ea819f4a1ccd59eed4",
+  "count": 1904,
+  "crawled_at": "2026-09-09T21:53:57.410989+00:00",
+  "digest": "7f966a1fdd1bfcd0021bf3218d63b772b5703119a20b6127f3396ceddce263d5",
+  "domain": "store-a",
+  "request_profile": {
+    "accept_language": "sv-SE,sv;q=0.9,en;q=0.5",
+    "locale": "sv-SE"
+  },
+  "run_id": "anchor-003",
+  "schema_version": 1,
+  "snapshot_sha256": "63e75ce932f7850b6c026cd025597ede4da4d95d5aba8935fd54b40a28130187"
+}

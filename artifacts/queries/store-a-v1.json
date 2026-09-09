@@ -1,0 +1,178 @@
+{
+  "id": "store-a-v1",
+  "store": "store-a",
+  "short_label": "Store A",
+  "display_name": "Swedish fashion retailer A",
+  "committed_at": "2026-09-09T21:40:00Z",
+  "k_eval": 10,
+  "k_run": 20,
+  "notes": "Frozen before any BM25 or native run artifacts existed. Queries come from shopper vocabulary and catalog structure (vendors, product types, tags), not from inspecting rankings. Relevance is catalog-grounded, not pooled human labels.",
+  "queries": [
+    {
+      "id": "q01",
+      "query": "Les Deux",
+      "stratum": "exact/brand",
+      "relevance": {"method": "vendor_equals", "vendor": "Les Deux", "grade": 3}
+    },
+    {
+      "id": "q02",
+      "query": "Carhartt WIP",
+      "stratum": "exact/brand",
+      "relevance": {"method": "vendor_equals", "vendor": "Carhartt WIP", "grade": 3}
+    },
+    {
+      "id": "q03",
+      "query": "Fred Perry",
+      "stratum": "exact/brand",
+      "relevance": {"method": "vendor_equals", "vendor": "Fred Perry", "grade": 3}
+    },
+    {
+      "id": "q04",
+      "query": "Filippa K",
+      "stratum": "exact/brand",
+      "relevance": {"method": "vendor_equals", "vendor": "Filippa K", "grade": 3}
+    },
+    {
+      "id": "q05",
+      "query": "jackor",
+      "stratum": "category",
+      "relevance": {"method": "product_type", "grades": {"Jackor": 3}}
+    },
+    {
+      "id": "q06",
+      "query": "jeans",
+      "stratum": "category",
+      "relevance": {"method": "product_type", "grades": {"Jeans": 3}}
+    },
+    {
+      "id": "q07",
+      "query": "väskor",
+      "stratum": "category",
+      "relevance": {"method": "product_type", "grades": {"Väskor": 3}}
+    },
+    {
+      "id": "q08",
+      "query": "solglasögon",
+      "stratum": "category",
+      "relevance": {"method": "product_type", "grades": {"Solglasögon": 3}}
+    },
+    {
+      "id": "q09",
+      "query": "jacka",
+      "stratum": "compound",
+      "relevance": {"method": "product_type", "grades": {"Jackor": 3, "Kappor": 2, "Västar": 2}}
+    },
+    {
+      "id": "q10",
+      "query": "skjorta",
+      "stratum": "compound",
+      "relevance": {"method": "product_type", "grades": {"Skjortor": 3, "Overshirts": 2, "Blusar": 2}}
+    },
+    {
+      "id": "q11",
+      "query": "väska",
+      "stratum": "compound",
+      "relevance": {"method": "product_type", "grades": {"Väskor": 3, "Plånböcker": 2}}
+    },
+    {
+      "id": "q12",
+      "query": "ull",
+      "stratum": "attribute",
+      "relevance": {"method": "tag_equals", "tag": "ull", "grade": 3}
+    },
+    {
+      "id": "q13",
+      "query": "linne",
+      "stratum": "attribute",
+      "relevance": {"method": "tag_equals", "tag": "linne", "grade": 3}
+    },
+    {
+      "id": "q14",
+      "query": "skinn",
+      "stratum": "attribute",
+      "relevance": {"method": "tag_equals", "tag": "skinn", "grade": 3}
+    },
+    {
+      "id": "q15",
+      "query": "jacket",
+      "stratum": "cross-language",
+      "relevance": {"method": "product_type", "grades": {"Jackor": 3, "Kappor": 2, "Västar": 2}}
+    },
+    {
+      "id": "q16",
+      "query": "dress",
+      "stratum": "cross-language",
+      "relevance": {"method": "product_type", "grades": {"Klänningar": 3, "Kjolar": 1}}
+    },
+    {
+      "id": "q17",
+      "query": "carhart",
+      "stratum": "misspelling",
+      "relevance": {"method": "vendor_equals", "vendor": "Carhartt WIP", "grade": 3}
+    },
+    {
+      "id": "q18",
+      "query": "filipa k",
+      "stratum": "misspelling",
+      "relevance": {"method": "vendor_equals", "vendor": "Filippa K", "grade": 3}
+    },
+    {
+      "id": "q19",
+      "query": "iphone",
+      "stratum": "adversarial/absent",
+      "relevance": {"method": "none"}
+    },
+    {
+      "id": "q20",
+      "query": "lego",
+      "stratum": "adversarial/absent",
+      "relevance": {"method": "none"}
+    },
+    {
+      "id": "q21",
+      "query": "skidpjäxor",
+      "stratum": "adversarial/absent",
+      "relevance": {"method": "none"}
+    },
+    {
+      "id": "q22",
+      "query": "svart skinnjacka",
+      "stratum": "natural language",
+      "relevance": {
+        "method": "all_of",
+        "max": 3,
+        "parts": [
+          {"method": "product_type", "grades": {"Jackor": 2}, "required": true},
+          {"method": "tag_equals", "tag": "skinn", "grade": 1},
+          {"method": "title_any", "tokens": ["black", "svart"], "grade": 1}
+        ]
+      }
+    },
+    {
+      "id": "q23",
+      "query": "röd klänning",
+      "stratum": "natural language",
+      "relevance": {
+        "method": "all_of",
+        "max": 3,
+        "parts": [
+          {"method": "product_type", "grades": {"Klänningar": 2}, "required": true},
+          {"method": "title_any", "tokens": ["red", "röd", "rouge", "burgundy"], "grade": 1}
+        ]
+      }
+    },
+    {
+      "id": "q24",
+      "query": "herrjeans",
+      "stratum": "natural language",
+      "relevance": {
+        "method": "all_of",
+        "max": 3,
+        "parts": [
+          {"method": "product_type", "grades": {"Jeans": 2}, "required": true},
+          {"method": "tag_equals", "tag": "Herr", "grade": 1}
+        ]
+      }
+    }
+  ]
+}

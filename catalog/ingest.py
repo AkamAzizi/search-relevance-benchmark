@@ -111,7 +111,7 @@ def ingest(domain: str, data_dir: Path, run_id: str, profile: RequestProfile,
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Ingest a Shopify catalog, politely.")
-    parser.add_argument("--store", required=True, help="e.g. zoovillage.com")
+    parser.add_argument("--store", required=True, help="storefront host, e.g. store.example")
     parser.add_argument("--locale", required=True, help="catalog locale, e.g. sv-SE or en")
     parser.add_argument("--accept-language", required=True)
     parser.add_argument("--data-dir", default="data")
