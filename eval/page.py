@@ -4,6 +4,7 @@ LABELS = {
     "native": "Store A native",
     "bm25": "BM25",
     "bm25-compound": "BM25+Compound",
+    "bm25-lex": "BM25+Lex",
 }
 
 STRATUM_ORDER = (
@@ -28,9 +29,9 @@ def _esc(text: str) -> str:
 def render_scorecard(card: dict) -> str:
     systems = card["systems"]
     native = systems.get("native") or next(iter(systems.values()))
-    mine = systems.get("bm25-compound") or systems.get("mine")
+    mine = systems.get("bm25-lex") or systems.get("bm25-compound") or systems.get("mine")
     native_label = native.get("label") or LABELS["native"]
-    mine_label = (mine or {}).get("label") or LABELS["bm25-compound"]
+    mine_label = (mine or {}).get("label") or LABELS["bm25-lex"]
     store = _esc(str(card.get("store") or "Store A"))
     display = _esc(str(card.get("display_name") or store))
     snapshot = card.get("snapshot") or {}
@@ -144,7 +145,7 @@ def render_scorecard(card: dict) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{store} native vs BM25+Compound</title>
+<title>{store} native vs {_esc(mine_label)}</title>
 <style>
   :root {{
     --ink: #141513;
@@ -226,9 +227,9 @@ def render_scorecard(card: dict) -> str:
 </head>
 <body>
   <p class="mute">{display} · independent methodology demo</p>
-  <h1>{store} native vs BM25+Compound</h1>
+  <h1>{store} native vs {_esc(mine_label)}</h1>
   <p class="lede">
-    Same catalog snapshot, same 24 frozen queries, same catalog-grounded grades.
+    Same catalog snapshot, same {queries.get("n", "?")} frozen queries, same catalog-grounded grades.
     Headline number is mean nDCG@10 on the 21 answerable queries. This is not an
     official audit or endorsement of the retailer.
   </p>
