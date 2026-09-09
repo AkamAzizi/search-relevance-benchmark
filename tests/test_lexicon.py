@@ -1,4 +1,5 @@
-from engine.lexicon import Lexicon, edit_distance, max_edits
+from engine.lexicon import ENGLISH_HEADS, MODIFIERS, Lexicon, edit_distance, max_edits
+from engine.tokenize import HEADS, PLURALS
 
 VENDOR_TOKENS = {
     "carhartt", "wip", "les", "deux", "filippa", "k", "acqua", "limone",
@@ -40,3 +41,43 @@ def test_correct_vendor_leaves_exact_short_ambiguous_and_distant_tokens_alone():
     assert lex.correct_vendor("timone") is None
     assert lex.correct_vendor("iphone") is None
     assert lex.correct_vendor("skidpjäxor") is None
+
+
+def test_english_heads_all_map_to_known_swedish_heads():
+    singulars = set(HEADS) | set(PLURALS.values())
+    assert ENGLISH_HEADS
+    for english, swedish in ENGLISH_HEADS.items():
+        assert english == english.lower()
+        assert swedish in singulars, (english, swedish)
+
+
+def test_expand_adds_modifier_prefix_and_keeps_compound_tokens():
+    lex = Lexicon(VENDOR_TOKENS)
+    assert lex.expand(["herrjeans"]) == ["herrjeans", "jeans", "herr"]
+    assert lex.expand(["damjacka"]) == ["damjacka", "jacka", "dam"]
+    assert "bomber" not in lex.expand(["bomberjacka"])
+    assert "herr" in MODIFIERS
+
+
+def test_expand_adds_english_head_and_vendor_correction():
+    lex = Lexicon(VENDOR_TOKENS)
+    assert lex.expand(["jacket"]) == ["jacket", "jacka"]
+    assert lex.expand(["dress"]) == ["dress", "klänning"]
+    assert lex.expand(["carhart"]) == ["carhart", "carhartt"]
+    assert lex.expand(["filipa", "k"]) == ["filipa", "filippa", "k"]
+
+
+def test_expand_leaves_absent_vocabulary_untouched():
+    lex = Lexicon(VENDOR_TOKENS)
+    assert lex.expand(["iphone"]) == ["iphone"]
+    assert lex.expand(["lego"]) == ["lego"]
+    assert lex.expand(["skidpjäxor"]) == ["skidpjäxor"]
+
+
+def test_from_docs_reads_vendor_tokens_from_the_vendor_field():
+    lex = Lexicon.from_docs([
+        ("1", {"title": "Detroit Jacket", "vendor": "Carhartt WIP", "product_type": "Jackor", "tags": "", "body": ""}),
+        ("2", {"title": "Hoodie", "vendor": "Les Deux", "product_type": "Tröjor", "tags": "", "body": ""}),
+    ])
+    assert lex.correct_vendor("carhart") == "carhartt"
+    assert lex.spec()["vendor_fuzzy"]["vendor_tokens"] == 4
