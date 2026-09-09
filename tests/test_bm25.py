@@ -69,6 +69,13 @@ BRANDS = [
      "product_type": "Tröjor", "tags": [], "body_html": ""},
 ]
 
+JEANS = [
+    {"product_id": "1", "title": "Slim Jeans", "vendor": "Nudie Jeans",
+     "product_type": "Jeans", "tags": ["Dam"], "body_html": ""},
+    {"product_id": "2", "title": "Loose Jeans", "vendor": "Nudie Jeans",
+     "product_type": "Jeans", "tags": ["Herr"], "body_html": ""},
+]
+
 
 def test_lexicon_requires_compound_documents():
     docs = [(r["product_id"], fields_from_record(r)) for r in BRANDS]
@@ -99,6 +106,16 @@ def test_lexicon_index_maps_english_head_to_swedish_product_type():
 
 
 def test_lexicon_index_still_returns_nothing_for_absent_vocabulary():
-    idx = _index(BRANDS, compound=True, lexicon=True)
+    idx = _index(BRANDS, compound=True, lexicon=True, coord=True)
     assert idx.search("iphone", k=5) == []
     assert idx.search("lego", k=5) == []
+
+
+def test_coord_scales_each_score_by_the_share_of_query_terms_matched():
+    # Query expands to [herrjeans, jeans, herr]. Doc 2 matches jeans and herr
+    # (2 of 3 terms); doc 1 matches jeans only (1 of 3).
+    without = dict(_index(JEANS, compound=True, lexicon=True, coord=False).search("herrjeans", k=2))
+    with_coord = dict(_index(JEANS, compound=True, lexicon=True, coord=True).search("herrjeans", k=2))
+    assert with_coord["2"] == pytest.approx(without["2"] * 2 / 3)
+    assert with_coord["1"] == pytest.approx(without["1"] * 1 / 3)
+    assert with_coord["2"] > with_coord["1"]

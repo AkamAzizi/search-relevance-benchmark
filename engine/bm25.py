@@ -66,6 +66,7 @@ class Bm25Index:
         if not q_tokens or n == 0:
             return []
         scores = [0.0] * n
+        matched: list[set[str]] = [set() for _ in range(n)]
         unique = set(q_tokens)
         for field, weight in self.weights.items():
             avgdl = self.avgdl[field] or 1.0
@@ -78,6 +79,10 @@ class Bm25Index:
                     dl = self.dl[field][i]
                     denom = freq + self.k1 * (1 - self.b + self.b * dl / avgdl)
                     scores[i] += weight * idf * (freq * (self.k1 + 1)) / denom
+                    matched[i].add(term)
+        if self.coord:
+            total = len(unique)
+            scores = [score * len(matched[i]) / total for i, score in enumerate(scores)]
         ranked = sorted(
             ((self.doc_ids[i], scores[i]) for i in range(n) if scores[i] > 0),
             key=lambda item: (-item[1], item[0]),
