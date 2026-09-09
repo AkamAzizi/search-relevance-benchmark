@@ -22,3 +22,29 @@ def max_edits(token: str) -> int:
         if len(token) < below:
             return edits
     return 2
+
+
+class Lexicon:
+    def __init__(self, vendor_tokens: set[str] | frozenset[str]):
+        self.vendor_tokens: list[str] = sorted(vendor_tokens)
+        self._vendor_set = set(self.vendor_tokens)
+
+    def correct_vendor(self, token: str) -> str | None:
+        if token in self._vendor_set:
+            return None
+        budget = max_edits(token)
+        if budget == 0:
+            return None
+        best: list[str] = []
+        best_distance = budget + 1
+        for candidate in self.vendor_tokens:
+            if abs(len(candidate) - len(token)) > budget:
+                continue
+            distance = edit_distance(token, candidate)
+            if distance < best_distance:
+                best_distance, best = distance, [candidate]
+            elif distance == best_distance:
+                best.append(candidate)
+        if best_distance <= budget and len(best) == 1:
+            return best[0]
+        return None
