@@ -140,6 +140,30 @@ def render_scorecard(card: dict) -> str:
   </ul>
 """
 
+    holdout = card.get("holdout") or {}
+    holdout_html = ""
+    if holdout:
+        hq = holdout.get("queries") or {}
+        rows = "".join(
+            f"<tr><th>{_esc(sys.get('label') or LABELS.get(name, name))}</th>"
+            f"<td class='num'>{_fmt(sys['answerable_ndcg'])}</td>"
+            f"<td class='num'>{sys['absent_returned']}</td></tr>"
+            for name, sys in (holdout.get("systems") or {}).items()
+        )
+        holdout_html = f"""
+  <h2>Held-out check</h2>
+  <p>
+    Query set <code>{_esc(str(hq.get("id", "")))}</code> ({hq.get("n", "?")} queries,
+    sha256 <code>{_esc(str(hq.get("sha256", ""))[:12])}…</code>) was frozen and committed
+    before {_esc(mine_label)} was run on any query. Nothing was changed after these
+    numbers were seen. Same snapshot, same grading, same metric.
+  </p>
+  <table>
+    <thead><tr><th>System</th><th>nDCG@10, answerable</th><th>Results on absent queries</th></tr></thead>
+    <tbody>{rows}</tbody>
+  </table>
+"""
+
     query_rows = []
     by_id: dict[str, dict] = {}
     for row in card.get("per_query") or []:
@@ -210,6 +234,7 @@ def render_scorecard(card: dict) -> str:
   }}
   th, td {{ text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--rule); vertical-align: top; }}
   th {{ font-weight: 500; }}
+  td.num {{ text-align: right; }}
   td:not(:first-child):not(:nth-child(2)):not(:nth-child(3)),
   thead th:not(:first-child) {{ text-align: right; }}
   .cols {{ display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }}
@@ -283,6 +308,7 @@ def render_scorecard(card: dict) -> str:
   </table>
 
   {findings}
+  {holdout_html}
 
   {''.join(example_html)}
 
@@ -300,8 +326,9 @@ def render_scorecard(card: dict) -> str:
       both crawls agreed. Image URLs are stored; images are never downloaded or shown.
     </p>
     <p>
-      <strong>Queries.</strong> 24 queries, frozen in
-      <code>artifacts/queries/store-a-v1.json</code> before any ranking was computed.
+      <strong>Queries.</strong> {queries.get("n", "?")} queries, frozen in
+      <code>artifacts/queries/{_esc(str(queries.get("id", "")))}.json</code> before any
+      ranking was computed.
       They are stratified (brand, category, Swedish compounds, attributes, English
       equivalents, misspellings, natural language, absent). They were chosen from
       shopper vocabulary and from catalog structure — vendors, product types, tags —

@@ -71,3 +71,17 @@ def test_page_falls_back_to_compound_when_lex_is_absent():
     html = render_scorecard(card)
     assert "Store A native vs BM25+Compound" in html
     assert "0.620" in html
+
+
+def test_page_renders_the_held_out_check_when_present():
+    html = render_scorecard(_card(holdout={
+        "queries": {"id": "store-a-v2", "n": 16, "sha256": "ghi"},
+        "systems": {
+            "native": {"label": "Store A native", "answerable_ndcg": 0.91, "absent_returned": 7},
+            "bm25-lex": {"label": "BM25+Lex", "answerable_ndcg": 0.93, "absent_returned": 0},
+        },
+    }))
+    assert "Held-out check" in html
+    assert "store-a-v2" in html
+    assert "0.930" in html
+    assert "0.910" in html
