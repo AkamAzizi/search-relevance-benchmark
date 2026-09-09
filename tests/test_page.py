@@ -60,6 +60,7 @@ def test_page_states_the_comparison_and_the_method():
     assert "Where they differ" in html
     assert "Kevin Poly Jacket" in html
     assert "store-a-v1" in html
+    assert "after the v1 results" in html
     assert "Held-out check" not in html
     assert "<img" not in html
 
