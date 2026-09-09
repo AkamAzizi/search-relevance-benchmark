@@ -1,4 +1,4 @@
-from engine.tokenize import compound_tokens, tokenize
+from engine.tokenize import compound_tokens, split_compound, tokenize
 
 
 def test_tokenize_lowercases_and_keeps_swedish_letters():
@@ -26,3 +26,19 @@ def test_compound_tokens_leave_short_or_unknown_words_alone():
 
 def test_compound_tokens_do_not_split_the_head_itself():
     assert compound_tokens("jacka") == ["jacka"]
+
+
+def test_split_compound_returns_prefix_and_head():
+    assert split_compound("bomberjacka") == ("bomber", "jacka")
+    assert split_compound("herrjeans") == ("herr", "jeans")
+    assert split_compound("skinnjacka") == ("skinn", "jacka")
+
+
+def test_split_compound_prefers_the_longest_head():
+    assert split_compound("sommarklänningar") == ("sommar", "klänningar")
+
+
+def test_split_compound_returns_none_for_heads_and_unknown_words():
+    assert split_compound("jacka") is None
+    assert split_compound("deux") is None
+    assert split_compound("iphone") is None

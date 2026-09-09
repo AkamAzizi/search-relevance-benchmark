@@ -38,23 +38,32 @@ def tokenize(text: str) -> list[str]:
     return [match.group(0).lower() for match in TOKEN_RE.finditer(stripped)]
 
 
-def compound_tokens(token: str) -> list[str]:
+def split_compound(token: str) -> tuple[str, str] | None:
+    """Return (prefix, head) when token is a compound ending in a known head."""
     token = token.lower()
-    out = [token]
-    if token in PLURALS and PLURALS[token] not in out:
-        out.append(PLURALS[token])
     for head in HEADS:
         if token == head or not token.endswith(head):
             continue
         prefix = token[:-len(head)]
         if len(prefix) < MIN_PREFIX:
             continue
+        return prefix, head
+    return None
+
+
+def compound_tokens(token: str) -> list[str]:
+    token = token.lower()
+    out = [token]
+    if token in PLURALS and PLURALS[token] not in out:
+        out.append(PLURALS[token])
+    split = split_compound(token)
+    if split:
+        head = split[1]
         if head not in out:
             out.append(head)
         singular = PLURALS.get(head)
         if singular and singular not in out:
             out.append(singular)
-        break
     return out
 
 
