@@ -65,3 +65,22 @@ def test_run_scores_local_systems_without_native_capture(tmp_path):
     assert "nDCG@10" in html
     assert "BM25+Lex" in html
     assert "holdout" not in card
+
+
+def test_run_embeds_a_held_out_scorecard_when_given(tmp_path):
+    snapshot, manifest, queries = _fixture(tmp_path)
+    holdout = tmp_path / "holdout.json"
+    holdout.write_text(json.dumps({
+        "queries": {"id": "t-heldout", "n": 3, "sha256": "abc"},
+        "systems": {
+            "native": {"label": "Store T native", "answerable_ndcg": 0.9,
+                       "precision": 0.8, "absent_returned": 4, "by_stratum": {}},
+            "bm25-lex": {"label": "BM25+Lex", "answerable_ndcg": 0.95,
+                         "precision": 0.85, "absent_returned": 0, "by_stratum": {}},
+        },
+    }), encoding="utf-8")
+    card = run(snapshot, manifest, queries, tmp_path / "out", tmp_path, capture=False,
+               site_path=None, holdout_path=holdout)
+    assert card["holdout"]["queries"]["id"] == "t-heldout"
+    assert card["holdout"]["systems"]["bm25-lex"]["answerable_ndcg"] == 0.95
+    assert set(card["holdout"]["systems"]["bm25-lex"]) == {"label", "answerable_ndcg", "absent_returned"}

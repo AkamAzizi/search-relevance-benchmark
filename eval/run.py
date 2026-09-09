@@ -36,6 +36,21 @@ def _index_lex(catalog: list[dict]) -> Bm25Index:
     return Bm25Index(docs, compound=True, lexicon=Lexicon.from_docs(docs), coord=True)
 
 
+def _holdout(path: Path) -> dict:
+    other = json.loads(Path(path).read_text(encoding="utf-8"))
+    return {
+        "queries": other["queries"],
+        "systems": {
+            name: {
+                "label": system["label"],
+                "answerable_ndcg": system["answerable_ndcg"],
+                "absent_returned": system["absent_returned"],
+            }
+            for name, system in other["systems"].items()
+        },
+    }
+
+
 def _run_local(index: Bm25Index, queries: list[dict], k: int) -> dict[str, list[str]]:
     return {
         query["id"]: [doc_id for doc_id, _score in index.search(query["query"], k=k)]
@@ -64,7 +79,7 @@ def _example(query: dict, native_ids: list[str], mine_ids: list[str],
 
 def run(snapshot_path: Path, manifest_path: Path, queries_path: Path, out_dir: Path,
         data_dir: Path, capture: bool, site_path: Path | None,
-        host: str | None = None) -> dict:
+        host: str | None = None, holdout_path: Path | None = None) -> dict:
     snapshot_path = Path(snapshot_path)
     manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
     snapshot_hash = _sha256(snapshot_path)
@@ -175,6 +190,8 @@ def run(snapshot_path: Path, manifest_path: Path, queries_path: Path, out_dir: P
         "per_query": scored["queries"],
         "examples": examples,
     }
+    if holdout_path is not None:
+        card["holdout"] = _holdout(Path(holdout_path))
     _write_json(out_dir / "scorecard.json", card)
     html = render_scorecard(card)
     (out_dir / "index.html").write_text(html, encoding="utf-8")
@@ -195,6 +212,8 @@ def main() -> None:
     parser.add_argument("--site", default="site/index.html")
     parser.add_argument("--host", default=None,
                         help="live storefront host for native capture; not written to public artifacts")
+    parser.add_argument("--holdout", default="",
+                        help="scorecard.json of a held-out run to embed on the page")
     parser.add_argument("--capture-native", action="store_true")
     args = parser.parse_args()
     card = run(
@@ -202,6 +221,7 @@ def main() -> None:
         Path(args.out), Path(args.data_dir), capture=args.capture_native,
         site_path=Path(args.site) if args.site else None,
         host=args.host,
+        holdout_path=Path(args.holdout) if args.holdout else None,
     )
     print(f"store={card['store']} snapshot={card['snapshot']['run_id']} "
           f"products={card['snapshot']['count']}")
