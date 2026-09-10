@@ -75,6 +75,7 @@ uv run python -m eval.run \
   --manifest artifacts/store-a/manifest-anchor-003.json \
   --queries artifacts/queries/store-a-v1.json \
   --out artifacts/store-a/scorecard-v1 \
+  --holdout artifacts/store-a/scorecard-v2/scorecard.json \
   --capture-native \
   --host "$STORE_HOST"
 ```
@@ -84,12 +85,14 @@ Re-running uses the cache. Native HTML stays in git-ignored `data/`; product ids
 scores are committed under `artifacts/`. `--host` is required for capture and is
 never written to public artifacts.
 
+Run the same command first with `--queries artifacts/queries/store-a-v2.json --out artifacts/store-a/scorecard-v2 --site ""` and without `--holdout` to produce the held-out scorecard.
+
 ## Layout
 
 | Path | What it is |
 |---|---|
 | `catalog/` | Polite ingest, two-hash sync, verified crawls. |
-| `engine/` | Fielded BM25 and Swedish fashion-head splitting. |
+| `engine/` | Fielded BM25, Swedish fashion-head splitting, and the BM25+Lex query lexicon. |
 | `eval/` | Frozen queries, catalog-grounded grades, nDCG, native capture, the page. |
 | `site/index.html` | The public scorecard (Store A). |
 | `artifacts/` | Committed. Manifests, query set, run specs, runs, scorecard. |
