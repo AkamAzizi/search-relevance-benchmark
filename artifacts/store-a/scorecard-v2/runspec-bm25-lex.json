@@ -1,0 +1,57 @@
+{
+  "k1": 1.2,
+  "b": 0.75,
+  "field_weights": {
+    "title": 5.0,
+    "vendor": 4.0,
+    "product_type": 3.0,
+    "tags": 2.0,
+    "body": 1.0
+  },
+  "k_run": 20,
+  "k_eval": 10,
+  "code": "engine.bm25.Bm25Index",
+  "system": "bm25-lex",
+  "compound": true,
+  "coord": true,
+  "lexicon": {
+    "modifiers": [
+      "barn",
+      "dam",
+      "herr"
+    ],
+    "english_heads": {
+      "jacket": "jacka",
+      "jackets": "jacka",
+      "dress": "klänning",
+      "dresses": "klänning",
+      "shirt": "skjorta",
+      "shirts": "skjorta",
+      "bag": "väska",
+      "bags": "väska",
+      "coat": "kappa",
+      "coats": "kappa",
+      "sweater": "tröja",
+      "sweaters": "tröja",
+      "cap": "keps",
+      "caps": "keps",
+      "beanie": "mössa",
+      "beanies": "mössa",
+      "skirt": "kjol",
+      "skirts": "kjol",
+      "vest": "väst",
+      "vests": "väst",
+      "pants": "byxa",
+      "trousers": "byxa",
+      "blouse": "blus",
+      "blouses": "blus",
+      "boots": "känga"
+    },
+    "vendor_fuzzy": {
+      "vocabulary": "tokens of the vendor field in the snapshot",
+      "vendor_tokens": 157,
+      "max_edits": "0 below 5 chars, 1 below 8, else 2",
+      "applies_when": "token is not an exact vendor token and exactly one vendor token is nearest"
+    }
+  }
+}

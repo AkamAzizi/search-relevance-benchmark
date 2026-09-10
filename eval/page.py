@@ -4,6 +4,7 @@ LABELS = {
     "native": "Store A native",
     "bm25": "BM25",
     "bm25-compound": "BM25+Compound",
+    "bm25-lex": "BM25+Lex",
 }
 
 STRATUM_ORDER = (
@@ -28,9 +29,9 @@ def _esc(text: str) -> str:
 def render_scorecard(card: dict) -> str:
     systems = card["systems"]
     native = systems.get("native") or next(iter(systems.values()))
-    mine = systems.get("bm25-compound") or systems.get("mine")
+    mine = systems.get("bm25-lex") or systems.get("bm25-compound") or systems.get("mine")
     native_label = native.get("label") or LABELS["native"]
-    mine_label = (mine or {}).get("label") or LABELS["bm25-compound"]
+    mine_label = (mine or {}).get("label") or LABELS["bm25-lex"]
     store = _esc(str(card.get("store") or "Store A"))
     display = _esc(str(card.get("display_name") or store))
     snapshot = card.get("snapshot") or {}
@@ -91,10 +92,12 @@ def render_scorecard(card: dict) -> str:
         )
 
     native_s = systems.get("native") or {}
-    mine_s = systems.get("bm25-compound") or {}
+    mine_s = mine or {}
+    comp_s = systems.get("bm25-compound") or {}
     bm25_s = systems.get("bm25") or {}
     n_str = native_s.get("by_stratum") or {}
     m_str = mine_s.get("by_stratum") or {}
+    c_str = comp_s.get("by_stratum") or {}
     b_str = bm25_s.get("by_stratum") or {}
     findings = ""
     if n_str and m_str:
@@ -107,21 +110,58 @@ def render_scorecard(card: dict) -> str:
     The comparison lives in the other strata.
   </p>
   <ul class="disc">
-    <li>Swedish compounds: BM25+Compound {_fmt(m_str.get("compound", 0))} ·
+    <li>Swedish compounds: {_esc(mine_label)} {_fmt(m_str.get("compound", 0))} ·
+        BM25+Compound {_fmt(c_str.get("compound", 0))} ·
         native {_fmt(n_str.get("compound", 0))} ·
         BM25 {_fmt(b_str.get("compound", 0))}. Splitting fashion heads
         (<em>jacka</em> from <em>bomberjacka</em>) is the mechanism.</li>
     <li>Misspellings: native {_fmt(n_str.get("misspelling", 0))} ·
-        both BM25 systems {_fmt(m_str.get("misspelling", 0))}.
-        The storefront corrects typos; this retriever does not.</li>
-    <li>Natural language: BM25+Compound {_fmt(m_str.get("natural language", 0))} ·
-        native {_fmt(n_str.get("natural language", 0))} ·
-        BM25 {_fmt(b_str.get("natural language", 0))}.</li>
+        {_esc(mine_label)} {_fmt(m_str.get("misspelling", 0))} ·
+        BM25 {_fmt(b_str.get("misspelling", 0))}.
+        {_esc(mine_label)} corrects a query token to a vendor token within one edit
+        (two for tokens of eight or more characters) and only when exactly one
+        vendor is that close. Nothing outside the vendor vocabulary is corrected.</li>
+    <li>English queries: native {_fmt(n_str.get("cross-language", 0))} ·
+        {_esc(mine_label)} {_fmt(m_str.get("cross-language", 0))} ·
+        BM25 {_fmt(b_str.get("cross-language", 0))}.
+        {_esc(mine_label)} maps English garment words seen in this catalog's titles
+        to the Swedish head (<em>jacket</em> → <em>jacka</em>).</li>
+    <li>Natural language: native {_fmt(n_str.get("natural language", 0))} ·
+        {_esc(mine_label)} {_fmt(m_str.get("natural language", 0))} ·
+        BM25 {_fmt(b_str.get("natural language", 0))}.
+        {_esc(mine_label)} keeps the modifier of a compound (<em>herr</em> from
+        <em>herrjeans</em>) and scales each document's score by the share of query
+        terms it matches, so jeans tagged Herr outrank jeans that are not.</li>
     <li>Absent queries (<em>iphone</em>, <em>lego</em>, <em>skidpjäxor</em>):
         native returned {native_s.get("absent_returned", 0)} products.
-        Both BM25 systems returned none, because those tokens are missing from
-        the catalog — not because of a fitted abstention model.</li>
+        Every BM25 system returned none, because those tokens are missing from
+        the catalog and typo correction is confined to vendor names — not because
+        of a fitted abstention model.</li>
   </ul>
+"""
+
+    holdout = card.get("holdout") or {}
+    holdout_html = ""
+    if holdout:
+        hq = holdout.get("queries") or {}
+        rows = "".join(
+            f"<tr><th>{_esc(sys.get('label') or LABELS.get(name, name))}</th>"
+            f"<td class='num'>{_fmt(sys['answerable_ndcg'])}</td>"
+            f"<td class='num'>{sys['absent_returned']}</td></tr>"
+            for name, sys in (holdout.get("systems") or {}).items()
+        )
+        holdout_html = f"""
+  <h2>Held-out check</h2>
+  <p>
+    Query set <code>{_esc(str(hq.get("id", "")))}</code> ({hq.get("n", "?")} queries,
+    sha256 <code>{_esc(str(hq.get("sha256", ""))[:12])}…</code>) was frozen and committed
+    before {_esc(mine_label)} was run on any query. Nothing was changed after these
+    numbers were seen. Same snapshot, same grading, same metric.
+  </p>
+  <table>
+    <thead><tr><th>System</th><th>nDCG@10, answerable</th><th>Results on absent queries</th></tr></thead>
+    <tbody>{rows}</tbody>
+  </table>
 """
 
     query_rows = []
@@ -144,7 +184,7 @@ def render_scorecard(card: dict) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{store} native vs BM25+Compound</title>
+<title>{store} native vs {_esc(mine_label)}</title>
 <style>
   :root {{
     --ink: #141513;
@@ -194,6 +234,7 @@ def render_scorecard(card: dict) -> str:
   }}
   th, td {{ text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--rule); vertical-align: top; }}
   th {{ font-weight: 500; }}
+  td.num {{ text-align: right; }}
   td:not(:first-child):not(:nth-child(2)):not(:nth-child(3)),
   thead th:not(:first-child) {{ text-align: right; }}
   .cols {{ display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }}
@@ -226,9 +267,9 @@ def render_scorecard(card: dict) -> str:
 </head>
 <body>
   <p class="mute">{display} · independent methodology demo</p>
-  <h1>{store} native vs BM25+Compound</h1>
+  <h1>{store} native vs {_esc(mine_label)}</h1>
   <p class="lede">
-    Same catalog snapshot, same 24 frozen queries, same catalog-grounded grades.
+    Same catalog snapshot, same {queries.get("n", "?")} frozen queries, same catalog-grounded grades.
     Headline number is mean nDCG@10 on the 21 answerable queries. This is not an
     official audit or endorsement of the retailer.
   </p>
@@ -267,6 +308,7 @@ def render_scorecard(card: dict) -> str:
   </table>
 
   {findings}
+  {holdout_html}
 
   {''.join(example_html)}
 
@@ -284,8 +326,9 @@ def render_scorecard(card: dict) -> str:
       both crawls agreed. Image URLs are stored; images are never downloaded or shown.
     </p>
     <p>
-      <strong>Queries.</strong> 24 queries, frozen in
-      <code>artifacts/queries/store-a-v1.json</code> before any ranking was computed.
+      <strong>Queries.</strong> {queries.get("n", "?")} queries, frozen in
+      <code>artifacts/queries/{_esc(str(queries.get("id", "")))}.json</code> before any
+      ranking was computed.
       They are stratified (brand, category, Swedish compounds, attributes, English
       equivalents, misspellings, natural language, absent). They were chosen from
       shopper vocabulary and from catalog structure — vendors, product types, tags —
@@ -309,8 +352,18 @@ def render_scorecard(card: dict) -> str:
       <em>BM25</em> is fielded Okapi BM25 (k1=1.2, b=0.75) over title, vendor,
       product type, tags, and description. <em>BM25+Compound</em> adds splitting of
       known Swedish fashion heads (<em>jacka</em> from <em>bomberjacka</em>,
-      <em>jackor</em> → <em>jacka</em>). No embeddings, no reranker, no truncation.
-      Parameters were fixed in advance; nothing was tuned on these queries.
+      <em>jackor</em> → <em>jacka</em>).
+      <em>BM25+Lex</em> keeps that index and adds four query-side rules: the modifier
+      of a compound is kept as a term (<em>herr</em> from <em>herrjeans</em>); English
+      garment words found in this catalog's titles map to the Swedish head
+      (<em>jacket</em> → <em>jacka</em>); a query token within one edit of exactly one
+      vendor token (two edits for long tokens) also matches that vendor token; and each
+      document's score is scaled by the share of query terms it matches.
+      No embeddings, no reranker, no truncation.
+      BM25 parameters were fixed in advance. BM25+Lex was designed after the v1 results
+      were visible: its rules were derived from the catalog (the vendor list, the tag
+      vocabulary, English words in titles), not from the query set, but its v1 number is
+      a development number. The held-out check above is the sealed one.
     </p>
     <p>
       <strong>Metric.</strong> nDCG@10 with gain <code>2^rel − 1</code>. IDCG uses
@@ -321,7 +374,8 @@ def render_scorecard(card: dict) -> str:
     </p>
     <p>
       <strong>What this number is not.</strong> It is not the human-labeled, sealed
-      test split in the design spec. The builder chose the query set. We specialised
+      test split in the design spec. The builder chose the query set, and BM25+Lex was built after the v1 results
+      were visible. We specialised
       a lexical retriever for this catalog’s language; the storefront did not.
       Exact snapshot equality with native search cannot be proven. On this run every
       captured native handle was in the snapshot ({overlap.get("mapped", "?")} mapped,

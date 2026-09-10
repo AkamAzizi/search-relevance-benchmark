@@ -8,12 +8,13 @@ from pathlib import Path
 from catalog.fetch import PoliteFetcher, RequestProfile
 from engine.bm25 import B, K1, WEIGHTS, Bm25Index
 from engine.docs import fields_from_record, load_snapshot
+from engine.lexicon import Lexicon
 from eval.grade import qrels_for_query
 from eval.native import capture_native
 from eval.page import render_scorecard
 from eval.score import score_systems
 
-EXAMPLE_QUERY_IDS = ("q01", "q09", "q19")
+EXAMPLE_QUERY_IDS = ("q01", "q09", "q17", "q19", "q24")
 
 
 def _sha256(path: Path) -> str:
@@ -28,6 +29,26 @@ def _write_json(path: Path, payload: object) -> None:
 def _index(catalog: list[dict], compound: bool) -> Bm25Index:
     docs = [(str(rec["product_id"]), fields_from_record(rec)) for rec in catalog]
     return Bm25Index(docs, compound=compound)
+
+
+def _index_lex(catalog: list[dict]) -> Bm25Index:
+    docs = [(str(rec["product_id"]), fields_from_record(rec)) for rec in catalog]
+    return Bm25Index(docs, compound=True, lexicon=Lexicon.from_docs(docs), coord=True)
+
+
+def _holdout(path: Path) -> dict:
+    other = json.loads(Path(path).read_text(encoding="utf-8"))
+    return {
+        "queries": other["queries"],
+        "systems": {
+            name: {
+                "label": system["label"],
+                "answerable_ndcg": system["answerable_ndcg"],
+                "absent_returned": system["absent_returned"],
+            }
+            for name, system in other["systems"].items()
+        },
+    }
 
 
 def _run_local(index: Bm25Index, queries: list[dict], k: int) -> dict[str, list[str]]:
@@ -58,7 +79,7 @@ def _example(query: dict, native_ids: list[str], mine_ids: list[str],
 
 def run(snapshot_path: Path, manifest_path: Path, queries_path: Path, out_dir: Path,
         data_dir: Path, capture: bool, site_path: Path | None,
-        host: str | None = None) -> dict:
+        host: str | None = None, holdout_path: Path | None = None) -> dict:
     snapshot_path = Path(snapshot_path)
     manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
     snapshot_hash = _sha256(snapshot_path)
@@ -81,6 +102,8 @@ def run(snapshot_path: Path, manifest_path: Path, queries_path: Path, out_dir: P
 
     bm25_ids = _run_local(_index(catalog, compound=False), queries, k_run)
     compound_ids = _run_local(_index(catalog, compound=True), queries, k_run)
+    lex_index = _index_lex(catalog)
+    lex_ids = _run_local(lex_index, queries, k_run)
 
     run_spec = {
         "k1": K1,
@@ -98,6 +121,11 @@ def run(snapshot_path: Path, manifest_path: Path, queries_path: Path, out_dir: P
     _write_json(out_dir / "run-bm25-compound.json", {
         "system": "bm25-compound", "queries": compound_ids,
     })
+    _write_json(out_dir / "runspec-bm25-lex.json", {
+        **run_spec, "system": "bm25-lex", "compound": True, "coord": True,
+        "lexicon": lex_index.lexicon.spec() if lex_index.lexicon else {},
+    })
+    _write_json(out_dir / "run-bm25-lex.json", {"system": "bm25-lex", "queries": lex_ids})
 
     native_ids = {query["id"]: [] for query in queries}
     overlap = {"mapped": 0, "unmapped": 0}
@@ -124,11 +152,12 @@ def run(snapshot_path: Path, manifest_path: Path, queries_path: Path, out_dir: P
         "native": native_ids,
         "bm25": bm25_ids,
         "bm25-compound": compound_ids,
+        "bm25-lex": lex_ids,
     }
     scored = score_systems(runs, queries, catalog, k=k_eval)
     by_id = {query["id"]: query for query in queries}
     examples = [
-        _example(by_id[qid], native_ids.get(qid, []), compound_ids.get(qid, []), catalog)
+        _example(by_id[qid], native_ids.get(qid, []), lex_ids.get(qid, []), catalog)
         for qid in EXAMPLE_QUERY_IDS
         if qid in by_id
     ]
@@ -156,10 +185,13 @@ def run(snapshot_path: Path, manifest_path: Path, queries_path: Path, out_dir: P
             "bm25-compound": {
                 **scored["systems"]["bm25-compound"], "label": "BM25+Compound",
             },
+            "bm25-lex": {**scored["systems"]["bm25-lex"], "label": "BM25+Lex"},
         },
         "per_query": scored["queries"],
         "examples": examples,
     }
+    if holdout_path is not None:
+        card["holdout"] = _holdout(Path(holdout_path))
     _write_json(out_dir / "scorecard.json", card)
     html = render_scorecard(card)
     (out_dir / "index.html").write_text(html, encoding="utf-8")
@@ -180,6 +212,8 @@ def main() -> None:
     parser.add_argument("--site", default="site/index.html")
     parser.add_argument("--host", default=None,
                         help="live storefront host for native capture; not written to public artifacts")
+    parser.add_argument("--holdout", default="",
+                        help="scorecard.json of a held-out run to embed on the page")
     parser.add_argument("--capture-native", action="store_true")
     args = parser.parse_args()
     card = run(
@@ -187,6 +221,7 @@ def main() -> None:
         Path(args.out), Path(args.data_dir), capture=args.capture_native,
         site_path=Path(args.site) if args.site else None,
         host=args.host,
+        holdout_path=Path(args.holdout) if args.holdout else None,
     )
     print(f"store={card['store']} snapshot={card['snapshot']['run_id']} "
           f"products={card['snapshot']['count']}")

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Store A native vs BM25+Lex</title>
+<style>
+  :root {
+    --ink: #141513;
+    --mute: #5a5d56;
+    --rule: #cfcfc8;
+    --paper: #f7f7f4;
+    --native: #2c4638;
+    --mine: #7a1f2b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--paper); color: var(--ink); }
+  body {
+    font: 16px/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;
+    max-width: 54rem;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 5rem;
+  }
+  h1, h2, h3 { font-weight: 600; letter-spacing: -0.02em; }
+  h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 0.5rem; }
+  h2 { font-size: 1.05rem; margin: 2.5rem 0 0.75rem; }
+  p.lede { font-size: 1.02rem; max-width: 38rem; }
+  .mute { color: var(--mute); }
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--ink);
+    margin: 1.75rem 0 1rem;
+  }
+  .hero div { background: var(--paper); padding: 1.1rem 1rem 1.2rem; }
+  .hero .num {
+    font-variant-numeric: tabular-nums lining-nums;
+    font-size: 3rem;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-weight: 600;
+  }
+  .hero .native .num { color: var(--native); }
+  .hero .mine .num { color: var(--mine); }
+  .hero .lbl { margin-top: 0.45rem; color: var(--mute); font-size: 0.92rem; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums lining-nums;
+    font-size: 0.95rem;
+  }
+  th, td { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-weight: 500; }
+  td.num { text-align: right; }
+  td:not(:first-child):not(:nth-child(2)):not(:nth-child(3)),
+  thead th:not(:first-child) { text-align: right; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  ol { list-style: none; padding: 0; margin: 0; }
+  ol li {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr 1.2rem;
+    gap: 0.4rem;
+    padding: 0.28rem 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.92rem;
+  }
+  .rank { color: var(--mute); }
+  .grade { text-align: right; font-variant-numeric: tabular-nums; }
+  .g3 { color: var(--mine); }
+  .g2 { color: var(--native); }
+  .g0, .g1 { color: var(--mute); }
+  .method {
+    border-top: 1px solid var(--ink);
+    margin-top: 3rem;
+    padding-top: 0.5rem;
+  }
+  ul.disc { padding-left: 1.2rem; }
+  code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.86em; }
+  @media (max-width: 640px) {
+    .hero, .cols { grid-template-columns: 1fr; }
+    h1 { font-size: 1.7rem; }
+  }
+</style>
+</head>
+<body>
+  <p class="mute">Swedish fashion retailer A · independent methodology demo</p>
+  <h1>Store A native vs BM25+Lex</h1>
+  <p class="lede">
+    Same catalog snapshot, same 16 frozen queries, same catalog-grounded grades.
+    Headline number is mean nDCG@10 on the 21 answerable queries. This is not an
+    official audit or endorsement of the retailer.
+  </p>
+  <div class="hero">
+    <div class="native">
+      <div class="num">0.885</div>
+      <div class="lbl">Store A native · nDCG@10</div>
+    </div>
+    <div class="mine">
+      <div class="num">0.941</div>
+      <div class="lbl">BM25+Lex · nDCG@10</div>
+    </div>
+  </div>
+  <p class="mute">
+    Snapshot anchor-003
+    · 1904 products
+    · query set store-a-v2
+    (16 queries)
+    · native overlap 283 mapped / 0 missing from snapshot
+  </p>
+
+  <h2>Score table</h2>
+  <table>
+    <thead><tr><th></th><th>Store A native</th><th>BM25</th><th>BM25+Compound</th><th>BM25+Lex</th></tr></thead>
+    <tbody>
+      <tr><th>nDCG@10, answerable</th><td>0.885</td><td>0.676</td><td>0.746</td><td>0.941</td></tr>
+      <tr><th>P@10 (grade ≥ 2)</th><td>0.825</td><td>0.594</td><td>0.694</td><td>0.838</td></tr>
+      <tr><th>Results returned on absent queries</th><td>3</td><td>0</td><td>0</td><td>0</td></tr>
+    </tbody>
+  </table>
+
+  <h2>By stratum (nDCG@10)</h2>
+  <table>
+    <thead><tr><th>Stratum</th><th>Store A native</th><th>BM25</th><th>BM25+Compound</th><th>BM25+Lex</th></tr></thead>
+    <tbody><tr><th>exact/brand</th><td>0.945</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><th>category</th><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><th>compound</th><td>1.000</td><td>0.898</td><td>1.000</td><td>1.000</td></tr><tr><th>attribute</th><td>0.906</td><td>0.801</td><td>0.801</td><td>0.801</td></tr><tr><th>cross-language</th><td>0.699</td><td>0.738</td><td>0.722</td><td>1.000</td></tr><tr><th>misspelling</th><td>1.000</td><td>0.000</td><td>0.000</td><td>1.000</td></tr><tr><th>natural language</th><td>0.646</td><td>0.297</td><td>0.697</td><td>0.786</td></tr><tr><th>adversarial/absent</th><td>0.000</td><td>0.000</td><td>0.000</td><td>0.000</td></tr></tbody>
+  </table>
+
+  
+  <h2>Where they differ</h2>
+  <p>
+    Brand, category and attribute queries are a retrieval ceiling, not a ranking
+    contest: every matching vendor or <code>product_type</code> has the same grade,
+    so nDCG@10 is 1.000 for any system that fills ten slots with relevant items.
+    The comparison lives in the other strata.
+  </p>
+  <ul class="disc">
+    <li>Swedish compounds: BM25+Lex 1.000 ·
+        BM25+Compound 1.000 ·
+        native 1.000 ·
+        BM25 0.898. Splitting fashion heads
+        (<em>jacka</em> from <em>bomberjacka</em>) is the mechanism.</li>
+    <li>Misspellings: native 1.000 ·
+        BM25+Lex 1.000 ·
+        BM25 0.000.
+        BM25+Lex corrects a query token to a vendor token within one edit
+        (two for tokens of eight or more characters) and only when exactly one
+        vendor is that close. Nothing outside the vendor vocabulary is corrected.</li>
+    <li>English queries: native 0.699 ·
+        BM25+Lex 1.000 ·
+        BM25 0.738.
+        BM25+Lex maps English garment words seen in this catalog's titles
+        to the Swedish head (<em>jacket</em> → <em>jacka</em>).</li>
+    <li>Natural language: native 0.646 ·
+        BM25+Lex 0.786 ·
+        BM25 0.297.
+        BM25+Lex keeps the modifier of a compound (<em>herr</em> from
+        <em>herrjeans</em>) and scales each document's score by the share of query
+        terms it matches, so jeans tagged Herr outrank jeans that are not.</li>
+    <li>Absent queries (<em>iphone</em>, <em>lego</em>, <em>skidpjäxor</em>):
+        native returned 3 products.
+        Every BM25 system returned none, because those tokens are missing from
+        the catalog and typo correction is confined to vendor names — not because
+        of a fitted abstention model.</li>
+  </ul>
+
+  
+
+  
+
+  <h2>Every query</h2>
+  <table>
+    <thead><tr><th>id</th><th>query</th><th>stratum</th><th>Store A native</th><th>BM25</th><th>BM25+Compound</th><th>BM25+Lex</th></tr></thead>
+    <tbody><tr><td>h01</td><td>Mos Mosh</td><td>exact/brand</td><td>0.890</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>h02</td><td>The North Face</td><td>exact/brand</td><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>h03</td><td>byxor</td><td>category</td><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>h04</td><td>skor</td><td>category</td><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>h05</td><td>tröja</td><td>compound</td><td>1.000</td><td>0.795</td><td>1.000</td><td>1.000</td></tr><tr><td>h06</td><td>keps</td><td>compound</td><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>h07</td><td>denim</td><td>attribute</td><td>0.812</td><td>0.603</td><td>0.603</td><td>0.603</td></tr><tr><td>h08</td><td>mocka</td><td>attribute</td><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>h09</td><td>bag</td><td>cross-language</td><td>0.714</td><td>0.563</td><td>0.531</td><td>1.000</td></tr><tr><td>h10</td><td>coat</td><td>cross-language</td><td>0.683</td><td>0.913</td><td>0.913</td><td>1.000</td></tr><tr><td>h11</td><td>lindberg</td><td>misspelling</td><td>1.000</td><td>0.000</td><td>0.000</td><td>1.000</td></tr><tr><td>h12</td><td>levis</td><td>misspelling</td><td>1.000</td><td>0.000</td><td>0.000</td><td>1.000</td></tr><tr><td>h13</td><td>damjacka</td><td>natural language</td><td>0.719</td><td>0.220</td><td>0.822</td><td>1.000</td></tr><tr><td>h14</td><td>blå skjorta</td><td>natural language</td><td>0.574</td><td>0.375</td><td>0.573</td><td>0.573</td></tr><tr><td>h15</td><td>playstation</td><td>adversarial/absent</td><td>0.000</td><td>0.000</td><td>0.000</td><td>0.000</td></tr><tr><td>h16</td><td>grästrimmer</td><td>adversarial/absent</td><td>0.000</td><td>0.000</td><td>0.000</td><td>0.000</td></tr></tbody>
+  </table>
+
+  <section class="method">
+    <h2>Methodology</h2>
+    <p>
+      This is a measurement, not a demo. The catalog was ingested from the public
+      Shopify <code>products.json</code> endpoint, crawled twice, and discarded unless
+      both crawls agreed. Image URLs are stored; images are never downloaded or shown.
+    </p>
+    <p>
+      <strong>Queries.</strong> 16 queries, frozen in
+      <code>artifacts/queries/store-a-v2.json</code> before any
+      ranking was computed.
+      They are stratified (brand, category, Swedish compounds, attributes, English
+      equivalents, misspellings, natural language, absent). They were chosen from
+      shopper vocabulary and from catalog structure — vendors, product types, tags —
+      not from looking at anyone’s result lists.
+    </p>
+    <p>
+      <strong>Relevance is catalog-grounded, not human-pooled.</strong> A brand query
+      is grade 3 iff <code>vendor</code> matches. A category query is grade 3 iff
+      <code>product_type</code> matches. Compound queries such as <em>jacka</em>
+      treat <code>Jackor</code> as 3 and related outerwear as 2. Absent queries have
+      no relevant documents. This is simple graded relevance: objective, reproducible,
+      and weaker than the human pooled judgements in the full design. It is also not
+      a BM25-shaped judge — a lexical overlap scorer would have rigged the comparison.
+    </p>
+    <p>
+      <strong>Systems.</strong> <em>Native</em> is the shopper-facing
+      <code>/search?q=&amp;type=product</code> page, captured once and replayed.
+      Rank comes from the <code>_pos</code> parameter on product links; first page,
+      20 results. Native is a live black box: its index can disagree with our
+      snapshot, so unmapped handles are counted rather than guessed.
+      <em>BM25</em> is fielded Okapi BM25 (k1=1.2, b=0.75) over title, vendor,
+      product type, tags, and description. <em>BM25+Compound</em> adds splitting of
+      known Swedish fashion heads (<em>jacka</em> from <em>bomberjacka</em>,
+      <em>jackor</em> → <em>jacka</em>).
+      <em>BM25+Lex</em> keeps that index and adds four query-side rules: the modifier
+      of a compound is kept as a term (<em>herr</em> from <em>herrjeans</em>); English
+      garment words found in this catalog's titles map to the Swedish head
+      (<em>jacket</em> → <em>jacka</em>); a query token within one edit of exactly one
+      vendor token (two edits for long tokens) also matches that vendor token; and each
+      document's score is scaled by the share of query terms it matches.
+      No embeddings, no reranker, no truncation.
+      BM25 parameters were fixed in advance. BM25+Lex was designed after the v1 results
+      were visible: its rules were derived from the catalog (the vendor list, the tag
+      vocabulary, English words in titles), not from the query set, but its v1 number is
+      a development number. The held-out check above is the sealed one.
+    </p>
+    <p>
+      <strong>Metric.</strong> nDCG@10 with gain <code>2^rel − 1</code>. IDCG uses
+      the full relevant set, not only retrieved documents. Mean nDCG on the 21
+      answerable queries is the headline; absent queries cannot be seen by nDCG
+      (padding with grade-0 documents still scores 0), so we also report how many
+      results each system returned on them. P@10 counts grade ≥ 2.
+    </p>
+    <p>
+      <strong>What this number is not.</strong> It is not the human-labeled, sealed
+      test split in the design spec. The builder chose the query set, and BM25+Lex was built after the v1 results
+      were visible. We specialised
+      a lexical retriever for this catalog’s language; the storefront did not.
+      Exact snapshot equality with native search cannot be proven. On this run every
+      captured native handle was in the snapshot (283 mapped,
+      0 missing). The crawl itself is not republished
+      (the catalog is theirs); the scorecard is auditable from the retained private
+      snapshot and the committed query file, runs, and grades. The retailer is not
+      named here: this page is a methodology demonstration, not a brand audit.
+    </p>
+  </section>
+</body>
+</html>

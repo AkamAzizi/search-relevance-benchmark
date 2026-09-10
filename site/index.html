@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Store A native vs BM25+Compound</title>
+<title>Store A native vs BM25+Lex</title>
 <style>
   :root {
     --ink: #141513;
@@ -53,6 +53,7 @@
   }
   th, td { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
   th { font-weight: 500; }
+  td.num { text-align: right; }
   td:not(:first-child):not(:nth-child(2)):not(:nth-child(3)),
   thead th:not(:first-child) { text-align: right; }
   .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
@@ -85,7 +86,7 @@
 </head>
 <body>
   <p class="mute">Swedish fashion retailer A · independent methodology demo</p>
-  <h1>Store A native vs BM25+Compound</h1>
+  <h1>Store A native vs BM25+Lex</h1>
   <p class="lede">
     Same catalog snapshot, same 24 frozen queries, same catalog-grounded grades.
     Headline number is mean nDCG@10 on the 21 answerable queries. This is not an
@@ -97,8 +98,8 @@
       <div class="lbl">Store A native · nDCG@10</div>
     </div>
     <div class="mine">
-      <div class="num">0.926</div>
-      <div class="lbl">BM25+Compound · nDCG@10</div>
+      <div class="num">0.998</div>
+      <div class="lbl">BM25+Lex · nDCG@10</div>
     </div>
   </div>
   <p class="mute">
@@ -111,18 +112,18 @@
 
   <h2>Score table</h2>
   <table>
-    <thead><tr><th></th><th>Store A native</th><th>BM25</th><th>BM25+Compound</th></tr></thead>
+    <thead><tr><th></th><th>Store A native</th><th>BM25</th><th>BM25+Compound</th><th>BM25+Lex</th></tr></thead>
     <tbody>
-      <tr><th>nDCG@10, answerable</th><td>0.957</td><td>0.811</td><td>0.926</td></tr>
-      <tr><th>P@10 (grade ≥ 2)</th><td>0.846</td><td>0.708</td><td>0.825</td></tr>
-      <tr><th>Results returned on absent queries</th><td>25</td><td>0</td><td>0</td></tr>
+      <tr><th>nDCG@10, answerable</th><td>0.957</td><td>0.811</td><td>0.926</td><td>0.998</td></tr>
+      <tr><th>P@10 (grade ≥ 2)</th><td>0.846</td><td>0.708</td><td>0.825</td><td>0.875</td></tr>
+      <tr><th>Results returned on absent queries</th><td>25</td><td>0</td><td>0</td><td>0</td></tr>
     </tbody>
   </table>
 
   <h2>By stratum (nDCG@10)</h2>
   <table>
-    <thead><tr><th>Stratum</th><th>Store A native</th><th>BM25</th><th>BM25+Compound</th></tr></thead>
-    <tbody><tr><th>exact/brand</th><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><th>category</th><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><th>compound</th><td>0.976</td><td>0.784</td><td>1.000</td></tr><tr><th>attribute</th><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><th>cross-language</th><td>0.968</td><td>0.918</td><td>0.886</td></tr><tr><th>misspelling</th><td>1.000</td><td>0.645</td><td>0.645</td></tr><tr><th>natural language</th><td>0.747</td><td>0.187</td><td>0.793</td></tr><tr><th>adversarial/absent</th><td>0.000</td><td>0.000</td><td>0.000</td></tr></tbody>
+    <thead><tr><th>Stratum</th><th>Store A native</th><th>BM25</th><th>BM25+Compound</th><th>BM25+Lex</th></tr></thead>
+    <tbody><tr><th>exact/brand</th><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><th>category</th><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><th>compound</th><td>0.976</td><td>0.784</td><td>1.000</td><td>1.000</td></tr><tr><th>attribute</th><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><th>cross-language</th><td>0.968</td><td>0.918</td><td>0.886</td><td>1.000</td></tr><tr><th>misspelling</th><td>1.000</td><td>0.645</td><td>0.645</td><td>1.000</td></tr><tr><th>natural language</th><td>0.747</td><td>0.187</td><td>0.793</td><td>0.984</td></tr><tr><th>adversarial/absent</th><td>0.000</td><td>0.000</td><td>0.000</td><td>0.000</td></tr></tbody>
   </table>
 
   
@@ -134,29 +135,55 @@
     The comparison lives in the other strata.
   </p>
   <ul class="disc">
-    <li>Swedish compounds: BM25+Compound 1.000 ·
+    <li>Swedish compounds: BM25+Lex 1.000 ·
+        BM25+Compound 1.000 ·
         native 0.976 ·
         BM25 0.784. Splitting fashion heads
         (<em>jacka</em> from <em>bomberjacka</em>) is the mechanism.</li>
     <li>Misspellings: native 1.000 ·
-        both BM25 systems 0.645.
-        The storefront corrects typos; this retriever does not.</li>
-    <li>Natural language: BM25+Compound 0.793 ·
-        native 0.747 ·
-        BM25 0.187.</li>
+        BM25+Lex 1.000 ·
+        BM25 0.645.
+        BM25+Lex corrects a query token to a vendor token within one edit
+        (two for tokens of eight or more characters) and only when exactly one
+        vendor is that close. Nothing outside the vendor vocabulary is corrected.</li>
+    <li>English queries: native 0.968 ·
+        BM25+Lex 1.000 ·
+        BM25 0.918.
+        BM25+Lex maps English garment words seen in this catalog's titles
+        to the Swedish head (<em>jacket</em> → <em>jacka</em>).</li>
+    <li>Natural language: native 0.747 ·
+        BM25+Lex 0.984 ·
+        BM25 0.187.
+        BM25+Lex keeps the modifier of a compound (<em>herr</em> from
+        <em>herrjeans</em>) and scales each document's score by the share of query
+        terms it matches, so jeans tagged Herr outrank jeans that are not.</li>
     <li>Absent queries (<em>iphone</em>, <em>lego</em>, <em>skidpjäxor</em>):
         native returned 25 products.
-        Both BM25 systems returned none, because those tokens are missing from
-        the catalog — not because of a fitted abstention model.</li>
+        Every BM25 system returned none, because those tokens are missing from
+        the catalog and typo correction is confined to vendor names — not because
+        of a fitted abstention model.</li>
   </ul>
 
+  
+  <h2>Held-out check</h2>
+  <p>
+    Query set <code>store-a-v2</code> (16 queries,
+    sha256 <code>2b4f842c1511…</code>) was frozen and committed
+    before BM25+Lex was run on any query. Nothing was changed after these
+    numbers were seen. Same snapshot, same grading, same metric.
+  </p>
+  <table>
+    <thead><tr><th>System</th><th>nDCG@10, answerable</th><th>Results on absent queries</th></tr></thead>
+    <tbody><tr><th>Store A native</th><td class='num'>0.885</td><td class='num'>3</td></tr><tr><th>BM25</th><td class='num'>0.676</td><td class='num'>0</td></tr><tr><th>BM25+Compound</th><td class='num'>0.746</td><td class='num'>0</td></tr><tr><th>BM25+Lex</th><td class='num'>0.941</td><td class='num'>0</td></tr></tbody>
+  </table>
 
-  <section class='example'><h2>Worked query: Les Deux</h2><div class='cols'><div class='col'><h3>Store A native</h3><ol><li><span class='rank'>1</span><span class='title'>Ballier Casual Track Pants - 100 Black</span><span class='grade g3'>3</span></li><li><span class='rank'>2</span><span class='title'>Core Contrast Hoodie - Black</span><span class='grade g3'>3</span></li><li><span class='rank'>3</span><span class='title'>Core Contrast T-Shirt - Light Sand</span><span class='grade g3'>3</span></li><li><span class='rank'>4</span><span class='title'>Piece Sweatshirt 2.0 - Navy</span><span class='grade g3'>3</span></li><li><span class='rank'>5</span><span class='title'>Core Contrast T-Shirt - Green Spruce</span><span class='grade g3'>3</span></li><li><span class='rank'>6</span><span class='title'>Nørregaard Tonal Sweatshirt - Dark Navy</span><span class='grade g3'>3</span></li><li><span class='rank'>7</span><span class='title'>Core Contrast T-Shirt - Iris Purple</span><span class='grade g3'>3</span></li><li><span class='rank'>8</span><span class='title'>Ballier Crew Jacket - Light Sand</span><span class='grade g3'>3</span></li><li><span class='rank'>9</span><span class='title'>Piece 2.0 T-Shirt - Mountain Grey Melange/Posy Green/Pine Green</span><span class='grade g3'>3</span></li><li><span class='rank'>10</span><span class='title'>Nørregaard Tonal T-Shirt - Black</span><span class='grade g3'>3</span></li></ol></div><div class='col'><h3>BM25+Compound</h3><ol><li><span class='rank'>1</span><span class='title'>Baseball Cap Suede II - Navy</span><span class='grade g3'>3</span></li><li><span class='rank'>2</span><span class='title'>Greyson Half-Zip Merino Knit - Black</span><span class='grade g3'>3</span></li><li><span class='rank'>3</span><span class='title'>Piece Sweatshirt 2.0 - Navy</span><span class='grade g3'>3</span></li><li><span class='rank'>4</span><span class='title'>Nørregaard T-Shirt - Red</span><span class='grade g3'>3</span></li><li><span class='rank'>5</span><span class='title'>Idris Padded Jacket - Black</span><span class='grade g3'>3</span></li><li><span class='rank'>6</span><span class='title'>Core Contrast T-Shirt - Green Spruce</span><span class='grade g3'>3</span></li><li><span class='rank'>7</span><span class='title'>Core Contrast T-Shirt - Iris Purple</span><span class='grade g3'>3</span></li><li><span class='rank'>8</span><span class='title'>Core Contrast T-Shirt - Light Sand</span><span class='grade g3'>3</span></li><li><span class='rank'>9</span><span class='title'>Exhibition Hoodie - Eggnog White</span><span class='grade g3'>3</span></li><li><span class='rank'>10</span><span class='title'>Norregaard Contrast T-Shirt - Irish Cream</span><span class='grade g3'>3</span></li></ol></div></div></section><section class='example'><h2>Worked query: jacka</h2><div class='cols'><div class='col'><h3>Store A native</h3><ol><li><span class='rank'>1</span><span class='title'>Kevin Poly Jacket - JL Navy</span><span class='grade g3'>3</span></li><li><span class='rank'>2</span><span class='title'>MMJilly Miras Down Jacket - Doeskin</span><span class='grade g3'>3</span></li><li><span class='rank'>3</span><span class='title'>Kevin Poly Jacket - Brindle</span><span class='grade g3'>3</span></li><li><span class='rank'>4</span><span class='title'>Bailey Recy Poly Jacket - JL Navy</span><span class='grade g3'>3</span></li><li><span class='rank'>5</span><span class='title'>Como Water Repellent Coat - Black</span><span class='grade g3'>3</span></li><li><span class='rank'>6</span><span class='title'>Livigno Classico Jacket - Peyote</span><span class='grade g3'>3</span></li><li><span class='rank'>7</span><span class='title'>OG Active Jacket - 894O Black</span><span class='grade g3'>3</span></li><li><span class='rank'>8</span><span class='title'>Le Vrai 4.0 Claude Warm - 633 Green Oak</span><span class='grade g3'>3</span></li><li><span class='rank'>9</span><span class='title'>Bailey Recy Poly Jacket - Brindle</span><span class='grade g3'>3</span></li><li><span class='rank'>10</span><span class='title'>Brent Jacket - 89XX Black</span><span class='grade g3'>3</span></li></ol></div><div class='col'><h3>BM25+Compound</h3><ol><li><span class='rank'>1</span><span class='title'>Joseph Tech Jacket - Black</span><span class='grade g3'>3</span></li><li><span class='rank'>2</span><span class='title'>Samantha Jacket - Black</span><span class='grade g3'>3</span></li><li><span class='rank'>3</span><span class='title'>Felix - Black</span><span class='grade g3'>3</span></li><li><span class='rank'>4</span><span class='title'>Palle - Pistachio Shell</span><span class='grade g3'>3</span></li><li><span class='rank'>5</span><span class='title'>Hayden - Olive</span><span class='grade g3'>3</span></li><li><span class='rank'>6</span><span class='title'>Disa Distressed - Brown</span><span class='grade g3'>3</span></li><li><span class='rank'>7</span><span class='title'>Solange Jacket - Ivory</span><span class='grade g3'>3</span></li><li><span class='rank'>8</span><span class='title'>Solange Jacket - Coffee</span><span class='grade g3'>3</span></li><li><span class='rank'>9</span><span class='title'>Lucie Boxy Mid - Black</span><span class='grade g3'>3</span></li><li><span class='rank'>10</span><span class='title'>Curtis - Brown</span><span class='grade g3'>3</span></li></ol></div></div></section><section class='example'><h2>Worked query: iphone</h2><div class='cols'><div class='col'><h3>Store A native</h3><ol><li><span class='rank'>1</span><span class='title'>Alpha Hood - Moonbeam</span><span class='grade g0'>0</span></li><li><span class='rank'>2</span><span class='title'>Asher S/S Shirt - Pale Peach</span><span class='grade g0'>0</span></li><li><span class='rank'>3</span><span class='title'>Nash Polo Knit - Black</span><span class='grade g0'>0</span></li><li><span class='rank'>4</span><span class='title'>Latania Dress - Chocolate</span><span class='grade g0'>0</span></li><li><span class='rank'>5</span><span class='title'>Tami Stripe Knit Maxi Dress - Watermelon</span><span class='grade g0'>0</span></li><li><span class='rank'>6</span><span class='title'>Akino Track Jacket - Black</span><span class='grade g0'>0</span></li><li><span class='rank'>7</span><span class='title'>Stellan - Cobblestone</span><span class='grade g0'>0</span></li><li><span class='rank'>8</span><span class='title'>Dani Relaxed Fit Jeans - Light Grey</span><span class='grade g0'>0</span></li></ol></div><div class='col'><h3>BM25+Compound</h3><ol><li class="empty">no results</li></ol></div></div></section>
+
+  <section class='example'><h2>Worked query: Les Deux</h2><div class='cols'><div class='col'><h3>Store A native</h3><ol><li><span class='rank'>1</span><span class='title'>Ballier Casual Track Pants - 100 Black</span><span class='grade g3'>3</span></li><li><span class='rank'>2</span><span class='title'>Core Contrast Hoodie - Black</span><span class='grade g3'>3</span></li><li><span class='rank'>3</span><span class='title'>Core Contrast T-Shirt - Light Sand</span><span class='grade g3'>3</span></li><li><span class='rank'>4</span><span class='title'>Piece Sweatshirt 2.0 - Navy</span><span class='grade g3'>3</span></li><li><span class='rank'>5</span><span class='title'>Core Contrast T-Shirt - Green Spruce</span><span class='grade g3'>3</span></li><li><span class='rank'>6</span><span class='title'>Nørregaard Tonal Sweatshirt - Dark Navy</span><span class='grade g3'>3</span></li><li><span class='rank'>7</span><span class='title'>Core Contrast T-Shirt - Iris Purple</span><span class='grade g3'>3</span></li><li><span class='rank'>8</span><span class='title'>Ballier Crew Jacket - Light Sand</span><span class='grade g3'>3</span></li><li><span class='rank'>9</span><span class='title'>Piece 2.0 T-Shirt - Mountain Grey Melange/Posy Green/Pine Green</span><span class='grade g3'>3</span></li><li><span class='rank'>10</span><span class='title'>Nørregaard Tonal T-Shirt - Black</span><span class='grade g3'>3</span></li></ol></div><div class='col'><h3>BM25+Lex</h3><ol><li><span class='rank'>1</span><span class='title'>Baseball Cap Suede II - Navy</span><span class='grade g3'>3</span></li><li><span class='rank'>2</span><span class='title'>Greyson Half-Zip Merino Knit - Black</span><span class='grade g3'>3</span></li><li><span class='rank'>3</span><span class='title'>Piece Sweatshirt 2.0 - Navy</span><span class='grade g3'>3</span></li><li><span class='rank'>4</span><span class='title'>Nørregaard T-Shirt - Red</span><span class='grade g3'>3</span></li><li><span class='rank'>5</span><span class='title'>Idris Padded Jacket - Black</span><span class='grade g3'>3</span></li><li><span class='rank'>6</span><span class='title'>Core Contrast T-Shirt - Green Spruce</span><span class='grade g3'>3</span></li><li><span class='rank'>7</span><span class='title'>Core Contrast T-Shirt - Iris Purple</span><span class='grade g3'>3</span></li><li><span class='rank'>8</span><span class='title'>Core Contrast T-Shirt - Light Sand</span><span class='grade g3'>3</span></li><li><span class='rank'>9</span><span class='title'>Exhibition Hoodie - Eggnog White</span><span class='grade g3'>3</span></li><li><span class='rank'>10</span><span class='title'>Norregaard Contrast T-Shirt - Irish Cream</span><span class='grade g3'>3</span></li></ol></div></div></section><section class='example'><h2>Worked query: jacka</h2><div class='cols'><div class='col'><h3>Store A native</h3><ol><li><span class='rank'>1</span><span class='title'>Kevin Poly Jacket - JL Navy</span><span class='grade g3'>3</span></li><li><span class='rank'>2</span><span class='title'>MMJilly Miras Down Jacket - Doeskin</span><span class='grade g3'>3</span></li><li><span class='rank'>3</span><span class='title'>Kevin Poly Jacket - Brindle</span><span class='grade g3'>3</span></li><li><span class='rank'>4</span><span class='title'>Bailey Recy Poly Jacket - JL Navy</span><span class='grade g3'>3</span></li><li><span class='rank'>5</span><span class='title'>Como Water Repellent Coat - Black</span><span class='grade g3'>3</span></li><li><span class='rank'>6</span><span class='title'>Livigno Classico Jacket - Peyote</span><span class='grade g3'>3</span></li><li><span class='rank'>7</span><span class='title'>OG Active Jacket - 894O Black</span><span class='grade g3'>3</span></li><li><span class='rank'>8</span><span class='title'>Le Vrai 4.0 Claude Warm - 633 Green Oak</span><span class='grade g3'>3</span></li><li><span class='rank'>9</span><span class='title'>Bailey Recy Poly Jacket - Brindle</span><span class='grade g3'>3</span></li><li><span class='rank'>10</span><span class='title'>Brent Jacket - 89XX Black</span><span class='grade g3'>3</span></li></ol></div><div class='col'><h3>BM25+Lex</h3><ol><li><span class='rank'>1</span><span class='title'>Joseph Tech Jacket - Black</span><span class='grade g3'>3</span></li><li><span class='rank'>2</span><span class='title'>Samantha Jacket - Black</span><span class='grade g3'>3</span></li><li><span class='rank'>3</span><span class='title'>Felix - Black</span><span class='grade g3'>3</span></li><li><span class='rank'>4</span><span class='title'>Palle - Pistachio Shell</span><span class='grade g3'>3</span></li><li><span class='rank'>5</span><span class='title'>Hayden - Olive</span><span class='grade g3'>3</span></li><li><span class='rank'>6</span><span class='title'>Disa Distressed - Brown</span><span class='grade g3'>3</span></li><li><span class='rank'>7</span><span class='title'>Solange Jacket - Ivory</span><span class='grade g3'>3</span></li><li><span class='rank'>8</span><span class='title'>Solange Jacket - Coffee</span><span class='grade g3'>3</span></li><li><span class='rank'>9</span><span class='title'>Lucie Boxy Mid - Black</span><span class='grade g3'>3</span></li><li><span class='rank'>10</span><span class='title'>Curtis - Brown</span><span class='grade g3'>3</span></li></ol></div></div></section><section class='example'><h2>Worked query: carhart</h2><div class='cols'><div class='col'><h3>Store A native</h3><ol><li><span class='rank'>1</span><span class='title'>OG Active Jacket - 894O Black</span><span class='grade g3'>3</span></li><li><span class='rank'>2</span><span class='title'>Prentis Liner - 00EXX Black / Black</span><span class='grade g3'>3</span></li><li><span class='rank'>3</span><span class='title'>S/S Torion Pocket T-Shirt - 89B7 Black</span><span class='grade g3'>3</span></li><li><span class='rank'>4</span><span class='title'>Detroit Jacket - Black / Black</span><span class='grade g3'>3</span></li><li><span class='rank'>5</span><span class='title'>W' Shepton OG Michigan Coat - 1LMXX Black / Natural</span><span class='grade g3'>3</span></li><li><span class='rank'>6</span><span class='title'>W' Kelly Shirt Jac - 1102 Leaf</span><span class='grade g3'>3</span></li><li><span class='rank'>7</span><span class='title'>Brent Jacket - 89XX Black</span><span class='grade g3'>3</span></li><li><span class='rank'>8</span><span class='title'>American Script Sweat - Black</span><span class='grade g3'>3</span></li><li><span class='rank'>9</span><span class='title'>Kelly Shirt Jac - 8902 Black</span><span class='grade g3'>3</span></li><li><span class='rank'>10</span><span class='title'>Kelly Shirt Jac - 2FS02 Peanut</span><span class='grade g3'>3</span></li></ol></div><div class='col'><h3>BM25+Lex</h3><ol><li><span class='rank'>1</span><span class='title'>Carhartt Mitten - 89XX Black</span><span class='grade g3'>3</span></li><li><span class='rank'>2</span><span class='title'>Kelly Shirt Jac - 8902 Black</span><span class='grade g3'>3</span></li><li><span class='rank'>3</span><span class='title'>Kelly Shirt Jac - 2FS02 Peanut</span><span class='grade g3'>3</span></li><li><span class='rank'>4</span><span class='title'>S/S Pocket T-Shirt - 02XX White</span><span class='grade g3'>3</span></li><li><span class='rank'>5</span><span class='title'>S/S Pocket T-Shirt - XX03 Gentle Orange</span><span class='grade g3'>3</span></li><li><span class='rank'>6</span><span class='title'>Bay Tote - Hamilton Brown</span><span class='grade g3'>3</span></li><li><span class='rank'>7</span><span class='title'>Half Zip American Script Sweat - 05XX Natural</span><span class='grade g3'>3</span></li><li><span class='rank'>8</span><span class='title'>W' Brandon Pant - 8906 Black</span><span class='grade g3'>3</span></li><li><span class='rank'>9</span><span class='title'>W' Brandon Pant - 102 Blue</span><span class='grade g3'>3</span></li><li><span class='rank'>10</span><span class='title'>Benton Sweat - Peanut</span><span class='grade g3'>3</span></li></ol></div></div></section><section class='example'><h2>Worked query: iphone</h2><div class='cols'><div class='col'><h3>Store A native</h3><ol><li><span class='rank'>1</span><span class='title'>Alpha Hood - Moonbeam</span><span class='grade g0'>0</span></li><li><span class='rank'>2</span><span class='title'>Asher S/S Shirt - Pale Peach</span><span class='grade g0'>0</span></li><li><span class='rank'>3</span><span class='title'>Nash Polo Knit - Black</span><span class='grade g0'>0</span></li><li><span class='rank'>4</span><span class='title'>Latania Dress - Chocolate</span><span class='grade g0'>0</span></li><li><span class='rank'>5</span><span class='title'>Tami Stripe Knit Maxi Dress - Watermelon</span><span class='grade g0'>0</span></li><li><span class='rank'>6</span><span class='title'>Akino Track Jacket - Black</span><span class='grade g0'>0</span></li><li><span class='rank'>7</span><span class='title'>Stellan - Cobblestone</span><span class='grade g0'>0</span></li><li><span class='rank'>8</span><span class='title'>Dani Relaxed Fit Jeans - Light Grey</span><span class='grade g0'>0</span></li></ol></div><div class='col'><h3>BM25+Lex</h3><ol><li class="empty">no results</li></ol></div></div></section><section class='example'><h2>Worked query: herrjeans</h2><div class='cols'><div class='col'><h3>Store A native</h3><ol><li><span class='rank'>1</span><span class='title'>MMCecilia Perla Jeans - Grey</span><span class='grade g2'>2</span></li><li><span class='rank'>2</span><span class='title'>Elijah Unwashed Black - 190303 Black</span><span class='grade g2'>2</span></li><li><span class='rank'>3</span><span class='title'>Cody Mid Wash Reg Jeans - 6194 Mid Blue</span><span class='grade g3'>3</span></li><li><span class='rank'>4</span><span class='title'>Jax LHT Slim Jeans - Moonbeam</span><span class='grade g3'>3</span></li><li><span class='rank'>5</span><span class='title'>Melrose Jeans - Blue</span><span class='grade g2'>2</span></li><li><span class='rank'>6</span><span class='title'>MMMarlena Puddle Jeans - Light Blue</span><span class='grade g2'>2</span></li><li><span class='rank'>7</span><span class='title'>Jax Stay Black Slim Jeans - 9999 Black</span><span class='grade g3'>3</span></li><li><span class='rank'>8</span><span class='title'>Elijah - 500165 Medium Blue</span><span class='grade g2'>2</span></li><li><span class='rank'>9</span><span class='title'>Elijah Blue Soft Denim - Light Blue</span><span class='grade g2'>2</span></li><li><span class='rank'>10</span><span class='title'>Jax Mid Wash Slim Jeans - Mid Blue</span><span class='grade g3'>3</span></li></ol></div><div class='col'><h3>BM25+Lex</h3><ol><li><span class='rank'>1</span><span class='title'>Jax LHT Slim Jeans - Moonbeam</span><span class='grade g3'>3</span></li><li><span class='rank'>2</span><span class='title'>Toni Regular Fit Jeans - Black</span><span class='grade g3'>3</span></li><li><span class='rank'>3</span><span class='title'>Dani Relaxed Fit Jeans - Light Grey</span><span class='grade g3'>3</span></li><li><span class='rank'>4</span><span class='title'>Dani Relaxed Fit Jeans - Mid Blue</span><span class='grade g3'>3</span></li><li><span class='rank'>5</span><span class='title'>Toni Regular Fit Jeans - Dark Blue</span><span class='grade g3'>3</span></li><li><span class='rank'>6</span><span class='title'>Jax Mid Wash Slim Jeans - Mid Blue</span><span class='grade g3'>3</span></li><li><span class='rank'>7</span><span class='title'>Jax LHT Slim Jeans - 6855 JL Navy</span><span class='grade g3'>3</span></li><li><span class='rank'>8</span><span class='title'>MMGAndrew Blue Black Jeans - Blue Black Denim</span><span class='grade g3'>3</span></li><li><span class='rank'>9</span><span class='title'>Jax Stay Black Slim Jeans - 9999 Black</span><span class='grade g3'>3</span></li><li><span class='rank'>10</span><span class='title'>Cody Mid Wash Reg Jeans - 6194 Mid Blue</span><span class='grade g3'>3</span></li></ol></div></div></section>
 
   <h2>Every query</h2>
   <table>
-    <thead><tr><th>id</th><th>query</th><th>stratum</th><th>Store A native</th><th>BM25</th><th>BM25+Compound</th></tr></thead>
-    <tbody><tr><td>q01</td><td>Les Deux</td><td>exact/brand</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q02</td><td>Carhartt WIP</td><td>exact/brand</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q03</td><td>Fred Perry</td><td>exact/brand</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q04</td><td>Filippa K</td><td>exact/brand</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q05</td><td>jackor</td><td>category</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q06</td><td>jeans</td><td>category</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q07</td><td>väskor</td><td>category</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q08</td><td>solglasögon</td><td>category</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q09</td><td>jacka</td><td>compound</td><td>1.000</td><td>0.792</td><td>1.000</td></tr><tr><td>q10</td><td>skjorta</td><td>compound</td><td>0.927</td><td>0.866</td><td>1.000</td></tr><tr><td>q11</td><td>väska</td><td>compound</td><td>1.000</td><td>0.695</td><td>1.000</td></tr><tr><td>q12</td><td>ull</td><td>attribute</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q13</td><td>linne</td><td>attribute</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q14</td><td>skinn</td><td>attribute</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q15</td><td>jacket</td><td>cross-language</td><td>1.000</td><td>0.931</td><td>0.867</td></tr><tr><td>q16</td><td>dress</td><td>cross-language</td><td>0.936</td><td>0.905</td><td>0.905</td></tr><tr><td>q17</td><td>carhart</td><td>misspelling</td><td>1.000</td><td>0.359</td><td>0.359</td></tr><tr><td>q18</td><td>filipa k</td><td>misspelling</td><td>1.000</td><td>0.931</td><td>0.931</td></tr><tr><td>q19</td><td>iphone</td><td>adversarial/absent</td><td>0.000</td><td>0.000</td><td>0.000</td></tr><tr><td>q20</td><td>lego</td><td>adversarial/absent</td><td>0.000</td><td>0.000</td><td>0.000</td></tr><tr><td>q21</td><td>skidpjäxor</td><td>adversarial/absent</td><td>0.000</td><td>0.000</td><td>0.000</td></tr><tr><td>q22</td><td>svart skinnjacka</td><td>natural language</td><td>0.713</td><td>0.220</td><td>0.951</td></tr><tr><td>q23</td><td>röd klänning</td><td>natural language</td><td>0.905</td><td>0.341</td><td>1.000</td></tr><tr><td>q24</td><td>herrjeans</td><td>natural language</td><td>0.624</td><td>0.000</td><td>0.429</td></tr></tbody>
+    <thead><tr><th>id</th><th>query</th><th>stratum</th><th>Store A native</th><th>BM25</th><th>BM25+Compound</th><th>BM25+Lex</th></tr></thead>
+    <tbody><tr><td>q01</td><td>Les Deux</td><td>exact/brand</td><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q02</td><td>Carhartt WIP</td><td>exact/brand</td><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q03</td><td>Fred Perry</td><td>exact/brand</td><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q04</td><td>Filippa K</td><td>exact/brand</td><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q05</td><td>jackor</td><td>category</td><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q06</td><td>jeans</td><td>category</td><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q07</td><td>väskor</td><td>category</td><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q08</td><td>solglasögon</td><td>category</td><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q09</td><td>jacka</td><td>compound</td><td>1.000</td><td>0.792</td><td>1.000</td><td>1.000</td></tr><tr><td>q10</td><td>skjorta</td><td>compound</td><td>0.927</td><td>0.866</td><td>1.000</td><td>1.000</td></tr><tr><td>q11</td><td>väska</td><td>compound</td><td>1.000</td><td>0.695</td><td>1.000</td><td>1.000</td></tr><tr><td>q12</td><td>ull</td><td>attribute</td><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q13</td><td>linne</td><td>attribute</td><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q14</td><td>skinn</td><td>attribute</td><td>1.000</td><td>1.000</td><td>1.000</td><td>1.000</td></tr><tr><td>q15</td><td>jacket</td><td>cross-language</td><td>1.000</td><td>0.931</td><td>0.867</td><td>1.000</td></tr><tr><td>q16</td><td>dress</td><td>cross-language</td><td>0.936</td><td>0.905</td><td>0.905</td><td>1.000</td></tr><tr><td>q17</td><td>carhart</td><td>misspelling</td><td>1.000</td><td>0.359</td><td>0.359</td><td>1.000</td></tr><tr><td>q18</td><td>filipa k</td><td>misspelling</td><td>1.000</td><td>0.931</td><td>0.931</td><td>1.000</td></tr><tr><td>q19</td><td>iphone</td><td>adversarial/absent</td><td>0.000</td><td>0.000</td><td>0.000</td><td>0.000</td></tr><tr><td>q20</td><td>lego</td><td>adversarial/absent</td><td>0.000</td><td>0.000</td><td>0.000</td><td>0.000</td></tr><tr><td>q21</td><td>skidpjäxor</td><td>adversarial/absent</td><td>0.000</td><td>0.000</td><td>0.000</td><td>0.000</td></tr><tr><td>q22</td><td>svart skinnjacka</td><td>natural language</td><td>0.713</td><td>0.220</td><td>0.951</td><td>0.951</td></tr><tr><td>q23</td><td>röd klänning</td><td>natural language</td><td>0.905</td><td>0.341</td><td>1.000</td><td>1.000</td></tr><tr><td>q24</td><td>herrjeans</td><td>natural language</td><td>0.624</td><td>0.000</td><td>0.429</td><td>1.000</td></tr></tbody>
   </table>
 
   <section class="method">
@@ -168,7 +195,8 @@
     </p>
     <p>
       <strong>Queries.</strong> 24 queries, frozen in
-      <code>artifacts/queries/store-a-v1.json</code> before any ranking was computed.
+      <code>artifacts/queries/store-a-v1.json</code> before any
+      ranking was computed.
       They are stratified (brand, category, Swedish compounds, attributes, English
       equivalents, misspellings, natural language, absent). They were chosen from
       shopper vocabulary and from catalog structure — vendors, product types, tags —
@@ -192,8 +220,18 @@
       <em>BM25</em> is fielded Okapi BM25 (k1=1.2, b=0.75) over title, vendor,
       product type, tags, and description. <em>BM25+Compound</em> adds splitting of
       known Swedish fashion heads (<em>jacka</em> from <em>bomberjacka</em>,
-      <em>jackor</em> → <em>jacka</em>). No embeddings, no reranker, no truncation.
-      Parameters were fixed in advance; nothing was tuned on these queries.
+      <em>jackor</em> → <em>jacka</em>).
+      <em>BM25+Lex</em> keeps that index and adds four query-side rules: the modifier
+      of a compound is kept as a term (<em>herr</em> from <em>herrjeans</em>); English
+      garment words found in this catalog's titles map to the Swedish head
+      (<em>jacket</em> → <em>jacka</em>); a query token within one edit of exactly one
+      vendor token (two edits for long tokens) also matches that vendor token; and each
+      document's score is scaled by the share of query terms it matches.
+      No embeddings, no reranker, no truncation.
+      BM25 parameters were fixed in advance. BM25+Lex was designed after the v1 results
+      were visible: its rules were derived from the catalog (the vendor list, the tag
+      vocabulary, English words in titles), not from the query set, but its v1 number is
+      a development number. The held-out check above is the sealed one.
     </p>
     <p>
       <strong>Metric.</strong> nDCG@10 with gain <code>2^rel − 1</code>. IDCG uses
@@ -204,7 +242,8 @@
     </p>
     <p>
       <strong>What this number is not.</strong> It is not the human-labeled, sealed
-      test split in the design spec. The builder chose the query set. We specialised
+      test split in the design spec. The builder chose the query set, and BM25+Lex was built after the v1 results
+      were visible. We specialised
       a lexical retriever for this catalog’s language; the storefront did not.
       Exact snapshot equality with native search cannot be proven. On this run every
       captured native handle was in the snapshot (445 mapped,

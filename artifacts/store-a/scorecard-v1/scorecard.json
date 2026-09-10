@@ -1,6 +1,7 @@
 {
-  "generated_at": "2026-09-09T21:59:18.001929+00:00",
+  "generated_at": "2026-09-10T06:09:19.026963+00:00",
   "store": "Store A",
+  "display_name": "Swedish fashion retailer A",
   "k": 10,
   "snapshot": {
     "run_id": "anchor-003",
@@ -69,6 +70,23 @@
         "natural language": 0.7933060728301674
       },
       "label": "BM25+Compound"
+    },
+    "bm25-lex": {
+      "ndcg": 0.8729727829132947,
+      "precision": 0.875,
+      "answerable_ndcg": 0.9976831804723368,
+      "absent_returned": 0,
+      "by_stratum": {
+        "exact/brand": 1.0,
+        "category": 1.0,
+        "compound": 1.0,
+        "attribute": 1.0,
+        "cross-language": 1.0,
+        "misspelling": 1.0,
+        "adversarial/absent": 0.0,
+        "natural language": 0.9837822633063579
+      },
+      "label": "BM25+Lex"
     }
   },
   "per_query": [
@@ -791,6 +809,246 @@
       "precision": 1.0,
       "returned": 20,
       "relevant": 114
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q01",
+      "query": "Les Deux",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 106
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q02",
+      "query": "Carhartt WIP",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 84
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q03",
+      "query": "Fred Perry",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 55
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q04",
+      "query": "Filippa K",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 29
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q05",
+      "query": "jackor",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 135
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q06",
+      "query": "jeans",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 114
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q07",
+      "query": "väskor",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 106
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q08",
+      "query": "solglasögon",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 73
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q09",
+      "query": "jacka",
+      "stratum": "compound",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 167
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q10",
+      "query": "skjorta",
+      "stratum": "compound",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 138
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q11",
+      "query": "väska",
+      "stratum": "compound",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 114
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q12",
+      "query": "ull",
+      "stratum": "attribute",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 81
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q13",
+      "query": "linne",
+      "stratum": "attribute",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 34
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q14",
+      "query": "skinn",
+      "stratum": "attribute",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 24
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q15",
+      "query": "jacket",
+      "stratum": "cross-language",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 167
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q16",
+      "query": "dress",
+      "stratum": "cross-language",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 34
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q17",
+      "query": "carhart",
+      "stratum": "misspelling",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 84
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q18",
+      "query": "filipa k",
+      "stratum": "misspelling",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 29
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q19",
+      "query": "iphone",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 0
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q20",
+      "query": "lego",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 0
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q21",
+      "query": "skidpjäxor",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 0
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q22",
+      "query": "svart skinnjacka",
+      "stratum": "natural language",
+      "ndcg": 0.9513467899190737,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 135
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q23",
+      "query": "röd klänning",
+      "stratum": "natural language",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 34
+    },
+    {
+      "system": "bm25-lex",
+      "id": "q24",
+      "query": "herrjeans",
+      "stratum": "natural language",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 114
     }
   ],
   "examples": [
@@ -1011,6 +1269,114 @@
       ]
     },
     {
+      "id": "q17",
+      "query": "carhart",
+      "native": [
+        {
+          "product_id": "14950362120524",
+          "title": "OG Active Jacket - 894O Black",
+          "grade": 3
+        },
+        {
+          "product_id": "14950362218828",
+          "title": "Prentis Liner - 00EXX Black / Black",
+          "grade": 3
+        },
+        {
+          "product_id": "14951126139212",
+          "title": "S/S Torion Pocket T-Shirt - 89B7 Black",
+          "grade": 3
+        },
+        {
+          "product_id": "14950356975948",
+          "title": "Detroit Jacket - Black / Black",
+          "grade": 3
+        },
+        {
+          "product_id": "14951121781068",
+          "title": "W' Shepton OG Michigan Coat - 1LMXX Black / Natural",
+          "grade": 3
+        },
+        {
+          "product_id": "14951118602572",
+          "title": "W' Kelly Shirt Jac - 1102 Leaf",
+          "grade": 3
+        },
+        {
+          "product_id": "14950361760076",
+          "title": "Brent Jacket - 89XX Black",
+          "grade": 3
+        },
+        {
+          "product_id": "14950352748876",
+          "title": "American Script Sweat - Black",
+          "grade": 3
+        },
+        {
+          "product_id": "14951125811532",
+          "title": "Kelly Shirt Jac - 8902 Black",
+          "grade": 3
+        },
+        {
+          "product_id": "14951125909836",
+          "title": "Kelly Shirt Jac - 2FS02 Peanut",
+          "grade": 3
+        }
+      ],
+      "mine": [
+        {
+          "product_id": "14950352879948",
+          "title": "Carhartt Mitten - 89XX Black",
+          "grade": 3
+        },
+        {
+          "product_id": "14951125811532",
+          "title": "Kelly Shirt Jac - 8902 Black",
+          "grade": 3
+        },
+        {
+          "product_id": "14951125909836",
+          "title": "Kelly Shirt Jac - 2FS02 Peanut",
+          "grade": 3
+        },
+        {
+          "product_id": "15594699620684",
+          "title": "S/S Pocket T-Shirt - 02XX White",
+          "grade": 3
+        },
+        {
+          "product_id": "15925786607948",
+          "title": "S/S Pocket T-Shirt - XX03 Gentle Orange",
+          "grade": 3
+        },
+        {
+          "product_id": "14951125549388",
+          "title": "Bay Tote - Hamilton Brown",
+          "grade": 3
+        },
+        {
+          "product_id": "15594732061004",
+          "title": "Half Zip American Script Sweat - 05XX Natural",
+          "grade": 3
+        },
+        {
+          "product_id": "14951121486156",
+          "title": "W' Brandon Pant - 8906 Black",
+          "grade": 3
+        },
+        {
+          "product_id": "14951121518924",
+          "title": "W' Brandon Pant - 102 Blue",
+          "grade": 3
+        },
+        {
+          "product_id": "14950361563468",
+          "title": "Benton Sweat - Peanut",
+          "grade": 3
+        }
+      ]
+    },
+    {
       "id": "q19",
       "query": "iphone",
       "native": [
@@ -1056,7 +1422,144 @@
         }
       ],
       "mine": []
+    },
+    {
+      "id": "q24",
+      "query": "herrjeans",
+      "native": [
+        {
+          "product_id": "15729348772172",
+          "title": "MMCecilia Perla Jeans - Grey",
+          "grade": 2
+        },
+        {
+          "product_id": "9284698702156",
+          "title": "Elijah Unwashed Black - 190303 Black",
+          "grade": 2
+        },
+        {
+          "product_id": "15116223545676",
+          "title": "Cody Mid Wash Reg Jeans - 6194 Mid Blue",
+          "grade": 3
+        },
+        {
+          "product_id": "15521804386636",
+          "title": "Jax LHT Slim Jeans - Moonbeam",
+          "grade": 3
+        },
+        {
+          "product_id": "9284153966924",
+          "title": "Melrose Jeans - Blue",
+          "grade": 2
+        },
+        {
+          "product_id": "15541784346956",
+          "title": "MMMarlena Puddle Jeans - Light Blue",
+          "grade": 2
+        },
+        {
+          "product_id": "15119993995596",
+          "title": "Jax Stay Black Slim Jeans - 9999 Black",
+          "grade": 3
+        },
+        {
+          "product_id": "15106528280908",
+          "title": "Elijah - 500165 Medium Blue",
+          "grade": 2
+        },
+        {
+          "product_id": "9283222077772",
+          "title": "Elijah Blue Soft Denim - Light Blue",
+          "grade": 2
+        },
+        {
+          "product_id": "15116223611212",
+          "title": "Jax Mid Wash Slim Jeans - Mid Blue",
+          "grade": 3
+        }
+      ],
+      "mine": [
+        {
+          "product_id": "15521804386636",
+          "title": "Jax LHT Slim Jeans - Moonbeam",
+          "grade": 3
+        },
+        {
+          "product_id": "9386755981644",
+          "title": "Toni Regular Fit Jeans - Black",
+          "grade": 3
+        },
+        {
+          "product_id": "9386757685580",
+          "title": "Dani Relaxed Fit Jeans - Light Grey",
+          "grade": 3
+        },
+        {
+          "product_id": "9386757718348",
+          "title": "Dani Relaxed Fit Jeans - Mid Blue",
+          "grade": 3
+        },
+        {
+          "product_id": "9386756047180",
+          "title": "Toni Regular Fit Jeans - Dark Blue",
+          "grade": 3
+        },
+        {
+          "product_id": "15116223611212",
+          "title": "Jax Mid Wash Slim Jeans - Mid Blue",
+          "grade": 3
+        },
+        {
+          "product_id": "15116223578444",
+          "title": "Jax LHT Slim Jeans - 6855 JL Navy",
+          "grade": 3
+        },
+        {
+          "product_id": "15783530430796",
+          "title": "MMGAndrew Blue Black Jeans - Blue Black Denim",
+          "grade": 3
+        },
+        {
+          "product_id": "15119993995596",
+          "title": "Jax Stay Black Slim Jeans - 9999 Black",
+          "grade": 3
+        },
+        {
+          "product_id": "15116223545676",
+          "title": "Cody Mid Wash Reg Jeans - 6194 Mid Blue",
+          "grade": 3
+        }
+      ]
     }
   ],
-  "display_name": "Swedish fashion retailer A"
+  "holdout": {
+    "queries": {
+      "id": "store-a-v2",
+      "n": 16,
+      "sha256": "2b4f842c1511fe29ac5b9a2bfe516fdfabe236af47720b29d6ccd4fae7410dca",
+      "committed_at": "2026-09-09T23:08:45Z"
+    },
+    "systems": {
+      "native": {
+        "label": "Store A native",
+        "answerable_ndcg": 0.8850521770948074,
+        "absent_returned": 3
+      },
+      "bm25": {
+        "label": "BM25",
+        "answerable_ndcg": 0.676311806954312,
+        "absent_returned": 0
+      },
+      "bm25-compound": {
+        "label": "BM25+Compound",
+        "answerable_ndcg": 0.7457884366459194,
+        "absent_returned": 0
+      },
+      "bm25-lex": {
+        "label": "BM25+Lex",
+        "answerable_ndcg": 0.9410766583443274,
+        "absent_returned": 0
+      }
+    }
+  }
 }
