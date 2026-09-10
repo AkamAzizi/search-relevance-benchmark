@@ -5,7 +5,7 @@ A search engine that grades search engines.
 The output is a *measurement* — a number produced by a stated method comparing two systems
 on the same data — not a demo.
 
-**Public scorecard:** [Store A native vs BM25+Lex](site/index.html)
+**Public scorecard:** [BM25+Lex vs Store A native](site/index.html)
 (open that file; methodology is on the page).
 
 This is an independent methodology demonstration. It is not an official audit or

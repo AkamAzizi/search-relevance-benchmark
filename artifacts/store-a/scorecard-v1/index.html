@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Store A native vs BM25+Lex</title>
+<title>BM25+Lex vs Store A native</title>
 <style>
   :root {
     --ink: #141513;
@@ -86,20 +86,20 @@
 </head>
 <body>
   <p class="mute">Swedish fashion retailer A · independent methodology demo</p>
-  <h1>Store A native vs BM25+Lex</h1>
+  <h1>BM25+Lex vs Store A native</h1>
   <p class="lede">
     Same catalog snapshot, same 24 frozen queries, same catalog-grounded grades.
     Headline number is mean nDCG@10 on the 21 answerable queries. This is not an
     official audit or endorsement of the retailer.
   </p>
   <div class="hero">
-    <div class="native">
-      <div class="num">0.957</div>
-      <div class="lbl">Store A native · nDCG@10</div>
-    </div>
     <div class="mine">
       <div class="num">0.998</div>
       <div class="lbl">BM25+Lex · nDCG@10</div>
+    </div>
+    <div class="native">
+      <div class="num">0.957</div>
+      <div class="lbl">Store A native · nDCG@10</div>
     </div>
   </div>
   <p class="mute">

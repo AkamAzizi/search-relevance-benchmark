@@ -184,7 +184,7 @@ def render_scorecard(card: dict) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{store} native vs {_esc(mine_label)}</title>
+<title>{_esc(mine_label)} vs {store} native</title>
 <style>
   :root {{
     --ink: #141513;
@@ -267,20 +267,20 @@ def render_scorecard(card: dict) -> str:
 </head>
 <body>
   <p class="mute">{display} · independent methodology demo</p>
-  <h1>{store} native vs {_esc(mine_label)}</h1>
+  <h1>{_esc(mine_label)} vs {store} native</h1>
   <p class="lede">
     Same catalog snapshot, same {queries.get("n", "?")} frozen queries, same catalog-grounded grades.
     Headline number is mean nDCG@10 on the 21 answerable queries. This is not an
     official audit or endorsement of the retailer.
   </p>
   <div class="hero">
-    <div class="native">
-      <div class="num">{native_ndcg}</div>
-      <div class="lbl">{_esc(native_label)} · nDCG@10</div>
-    </div>
     <div class="mine">
       <div class="num">{mine_ndcg}</div>
       <div class="lbl">{_esc(mine_label)} · nDCG@10</div>
+    </div>
+    <div class="native">
+      <div class="num">{native_ndcg}</div>
+      <div class="lbl">{_esc(native_label)} · nDCG@10</div>
     </div>
   </div>
   <p class="mute">

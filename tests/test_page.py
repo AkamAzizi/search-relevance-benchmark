@@ -54,7 +54,9 @@ def test_page_states_the_comparison_and_the_method():
     assert "zoovillage" not in html.lower()
     assert "0.710" in html
     assert "0.620" in html
-    assert "Store A native vs BM25+Lex" in html
+    assert "BM25+Lex vs Store A native" in html
+    body = html.split("<body>", 1)[1]
+    assert body.index("BM25+Lex · nDCG@10") < body.index("Store A native · nDCG@10")
     assert "nDCG@10" in html
     assert "catalog-grounded" in html
     assert "Where they differ" in html
@@ -69,7 +71,7 @@ def test_page_falls_back_to_compound_when_lex_is_absent():
     card = _card()
     del card["systems"]["bm25-lex"]
     html = render_scorecard(card)
-    assert "Store A native vs BM25+Compound" in html
+    assert "BM25+Compound vs Store A native" in html
     assert "0.620" in html
 
 
