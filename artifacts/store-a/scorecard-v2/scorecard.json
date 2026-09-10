@@ -1,0 +1,735 @@
+{
+  "generated_at": "2026-09-10T06:08:43.763347+00:00",
+  "store": "Store A",
+  "display_name": "Swedish fashion retailer A",
+  "k": 10,
+  "snapshot": {
+    "run_id": "anchor-003",
+    "count": 1904,
+    "sha256": "63e75ce932f7850b6c026cd025597ede4da4d95d5aba8935fd54b40a28130187",
+    "digest": "7f966a1fdd1bfcd0021bf3218d63b772b5703119a20b6127f3396ceddce263d5"
+  },
+  "queries": {
+    "id": "store-a-v2",
+    "n": 16,
+    "sha256": "2b4f842c1511fe29ac5b9a2bfe516fdfabe236af47720b29d6ccd4fae7410dca",
+    "committed_at": "2026-09-09T23:08:45Z"
+  },
+  "overlap": {
+    "mapped": 283,
+    "unmapped": 0
+  },
+  "systems": {
+    "native": {
+      "ndcg": 0.7744206549579564,
+      "precision": 0.825,
+      "answerable_ndcg": 0.8850521770948074,
+      "absent_returned": 3,
+      "by_stratum": {
+        "exact/brand": 0.94497705842548,
+        "category": 1.0,
+        "compound": 1.0,
+        "attribute": 0.9057779239361423,
+        "cross-language": 0.6985003734202523,
+        "misspelling": 1.0,
+        "natural language": 0.6461098838817774,
+        "adversarial/absent": 0.0
+      },
+      "label": "Store A native"
+    },
+    "bm25": {
+      "ndcg": 0.5917728310850231,
+      "precision": 0.59375,
+      "answerable_ndcg": 0.676311806954312,
+      "absent_returned": 0,
+      "by_stratum": {
+        "exact/brand": 1.0,
+        "category": 1.0,
+        "compound": 0.8975828762407045,
+        "attribute": 0.8012532401908792,
+        "cross-language": 0.7379631344025491,
+        "misspelling": 0.0,
+        "natural language": 0.2973833978460516,
+        "adversarial/absent": 0.0
+      },
+      "label": "BM25"
+    },
+    "bm25-compound": {
+      "ndcg": 0.6525648820651795,
+      "precision": 0.69375,
+      "answerable_ndcg": 0.7457884366459194,
+      "absent_returned": 0,
+      "by_stratum": {
+        "exact/brand": 1.0,
+        "category": 1.0,
+        "compound": 1.0,
+        "attribute": 0.8012532401908792,
+        "cross-language": 0.7221393273173667,
+        "misspelling": 0.0,
+        "natural language": 0.6971264890131899,
+        "adversarial/absent": 0.0
+      },
+      "label": "BM25+Compound"
+    },
+    "bm25-lex": {
+      "ndcg": 0.8234420760512865,
+      "precision": 0.8375,
+      "answerable_ndcg": 0.9410766583443274,
+      "absent_returned": 0,
+      "by_stratum": {
+        "exact/brand": 1.0,
+        "category": 1.0,
+        "compound": 1.0,
+        "attribute": 0.8012532401908792,
+        "cross-language": 1.0,
+        "misspelling": 1.0,
+        "natural language": 0.7862833682194129,
+        "adversarial/absent": 0.0
+      },
+      "label": "BM25+Lex"
+    }
+  },
+  "per_query": [
+    {
+      "system": "native",
+      "id": "h01",
+      "query": "Mos Mosh",
+      "stratum": "exact/brand",
+      "ndcg": 0.8899541168509599,
+      "precision": 0.9,
+      "returned": 20,
+      "relevant": 100
+    },
+    {
+      "system": "native",
+      "id": "h02",
+      "query": "The North Face",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 45
+    },
+    {
+      "system": "native",
+      "id": "h03",
+      "query": "byxor",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 129
+    },
+    {
+      "system": "native",
+      "id": "h04",
+      "query": "skor",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 104
+    },
+    {
+      "system": "native",
+      "id": "h05",
+      "query": "tröja",
+      "stratum": "compound",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 367
+    },
+    {
+      "system": "native",
+      "id": "h06",
+      "query": "keps",
+      "stratum": "compound",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 56
+    },
+    {
+      "system": "native",
+      "id": "h07",
+      "query": "denim",
+      "stratum": "attribute",
+      "ndcg": 0.8115558478722845,
+      "precision": 0.8,
+      "returned": 20,
+      "relevant": 36
+    },
+    {
+      "system": "native",
+      "id": "h08",
+      "query": "mocka",
+      "stratum": "attribute",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 24
+    },
+    {
+      "system": "native",
+      "id": "h09",
+      "query": "bag",
+      "stratum": "cross-language",
+      "ndcg": 0.7136540102475307,
+      "precision": 0.8,
+      "returned": 20,
+      "relevant": 114
+    },
+    {
+      "system": "native",
+      "id": "h10",
+      "query": "coat",
+      "stratum": "cross-language",
+      "ndcg": 0.6833467365929738,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 156
+    },
+    {
+      "system": "native",
+      "id": "h11",
+      "query": "lindberg",
+      "stratum": "misspelling",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 112
+    },
+    {
+      "system": "native",
+      "id": "h12",
+      "query": "levis",
+      "stratum": "misspelling",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 27
+    },
+    {
+      "system": "native",
+      "id": "h13",
+      "query": "damjacka",
+      "stratum": "natural language",
+      "ndcg": 0.7186960662926898,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 135
+    },
+    {
+      "system": "native",
+      "id": "h14",
+      "query": "blå skjorta",
+      "stratum": "natural language",
+      "ndcg": 0.5735237014708648,
+      "precision": 0.7,
+      "returned": 20,
+      "relevant": 86
+    },
+    {
+      "system": "native",
+      "id": "h15",
+      "query": "playstation",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 1,
+      "relevant": 0
+    },
+    {
+      "system": "native",
+      "id": "h16",
+      "query": "grästrimmer",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 2,
+      "relevant": 0
+    },
+    {
+      "system": "bm25",
+      "id": "h01",
+      "query": "Mos Mosh",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 100
+    },
+    {
+      "system": "bm25",
+      "id": "h02",
+      "query": "The North Face",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 45
+    },
+    {
+      "system": "bm25",
+      "id": "h03",
+      "query": "byxor",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 129
+    },
+    {
+      "system": "bm25",
+      "id": "h04",
+      "query": "skor",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 104
+    },
+    {
+      "system": "bm25",
+      "id": "h05",
+      "query": "tröja",
+      "stratum": "compound",
+      "ndcg": 0.7951657524814091,
+      "precision": 0.8,
+      "returned": 20,
+      "relevant": 367
+    },
+    {
+      "system": "bm25",
+      "id": "h06",
+      "query": "keps",
+      "stratum": "compound",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 17,
+      "relevant": 56
+    },
+    {
+      "system": "bm25",
+      "id": "h07",
+      "query": "denim",
+      "stratum": "attribute",
+      "ndcg": 0.6025064803817582,
+      "precision": 0.5,
+      "returned": 20,
+      "relevant": 36
+    },
+    {
+      "system": "bm25",
+      "id": "h08",
+      "query": "mocka",
+      "stratum": "attribute",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 24
+    },
+    {
+      "system": "bm25",
+      "id": "h09",
+      "query": "bag",
+      "stratum": "cross-language",
+      "ndcg": 0.5626475208496899,
+      "precision": 0.7,
+      "returned": 20,
+      "relevant": 114
+    },
+    {
+      "system": "bm25",
+      "id": "h10",
+      "query": "coat",
+      "stratum": "cross-language",
+      "ndcg": 0.9132787479554083,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 156
+    },
+    {
+      "system": "bm25",
+      "id": "h11",
+      "query": "lindberg",
+      "stratum": "misspelling",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 112
+    },
+    {
+      "system": "bm25",
+      "id": "h12",
+      "query": "levis",
+      "stratum": "misspelling",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 27
+    },
+    {
+      "system": "bm25",
+      "id": "h13",
+      "query": "damjacka",
+      "stratum": "natural language",
+      "ndcg": 0.22009176629808017,
+      "precision": 0.1,
+      "returned": 1,
+      "relevant": 135
+    },
+    {
+      "system": "bm25",
+      "id": "h14",
+      "query": "blå skjorta",
+      "stratum": "natural language",
+      "ndcg": 0.3746750293940231,
+      "precision": 0.4,
+      "returned": 20,
+      "relevant": 86
+    },
+    {
+      "system": "bm25",
+      "id": "h15",
+      "query": "playstation",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 0
+    },
+    {
+      "system": "bm25",
+      "id": "h16",
+      "query": "grästrimmer",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 0
+    },
+    {
+      "system": "bm25-compound",
+      "id": "h01",
+      "query": "Mos Mosh",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 100
+    },
+    {
+      "system": "bm25-compound",
+      "id": "h02",
+      "query": "The North Face",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 45
+    },
+    {
+      "system": "bm25-compound",
+      "id": "h03",
+      "query": "byxor",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 129
+    },
+    {
+      "system": "bm25-compound",
+      "id": "h04",
+      "query": "skor",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 104
+    },
+    {
+      "system": "bm25-compound",
+      "id": "h05",
+      "query": "tröja",
+      "stratum": "compound",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 367
+    },
+    {
+      "system": "bm25-compound",
+      "id": "h06",
+      "query": "keps",
+      "stratum": "compound",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 56
+    },
+    {
+      "system": "bm25-compound",
+      "id": "h07",
+      "query": "denim",
+      "stratum": "attribute",
+      "ndcg": 0.6025064803817582,
+      "precision": 0.5,
+      "returned": 20,
+      "relevant": 36
+    },
+    {
+      "system": "bm25-compound",
+      "id": "h08",
+      "query": "mocka",
+      "stratum": "attribute",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 24
+    },
+    {
+      "system": "bm25-compound",
+      "id": "h09",
+      "query": "bag",
+      "stratum": "cross-language",
+      "ndcg": 0.5309999066793252,
+      "precision": 0.7,
+      "returned": 20,
+      "relevant": 114
+    },
+    {
+      "system": "bm25-compound",
+      "id": "h10",
+      "query": "coat",
+      "stratum": "cross-language",
+      "ndcg": 0.9132787479554083,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 156
+    },
+    {
+      "system": "bm25-compound",
+      "id": "h11",
+      "query": "lindberg",
+      "stratum": "misspelling",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 112
+    },
+    {
+      "system": "bm25-compound",
+      "id": "h12",
+      "query": "levis",
+      "stratum": "misspelling",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 27
+    },
+    {
+      "system": "bm25-compound",
+      "id": "h13",
+      "query": "damjacka",
+      "stratum": "natural language",
+      "ndcg": 0.821686241587554,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 135
+    },
+    {
+      "system": "bm25-compound",
+      "id": "h14",
+      "query": "blå skjorta",
+      "stratum": "natural language",
+      "ndcg": 0.5725667364388258,
+      "precision": 0.9,
+      "returned": 20,
+      "relevant": 86
+    },
+    {
+      "system": "bm25-compound",
+      "id": "h15",
+      "query": "playstation",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 0
+    },
+    {
+      "system": "bm25-compound",
+      "id": "h16",
+      "query": "grästrimmer",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 0
+    },
+    {
+      "system": "bm25-lex",
+      "id": "h01",
+      "query": "Mos Mosh",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 100
+    },
+    {
+      "system": "bm25-lex",
+      "id": "h02",
+      "query": "The North Face",
+      "stratum": "exact/brand",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 45
+    },
+    {
+      "system": "bm25-lex",
+      "id": "h03",
+      "query": "byxor",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 129
+    },
+    {
+      "system": "bm25-lex",
+      "id": "h04",
+      "query": "skor",
+      "stratum": "category",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 104
+    },
+    {
+      "system": "bm25-lex",
+      "id": "h05",
+      "query": "tröja",
+      "stratum": "compound",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 367
+    },
+    {
+      "system": "bm25-lex",
+      "id": "h06",
+      "query": "keps",
+      "stratum": "compound",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 56
+    },
+    {
+      "system": "bm25-lex",
+      "id": "h07",
+      "query": "denim",
+      "stratum": "attribute",
+      "ndcg": 0.6025064803817582,
+      "precision": 0.5,
+      "returned": 20,
+      "relevant": 36
+    },
+    {
+      "system": "bm25-lex",
+      "id": "h08",
+      "query": "mocka",
+      "stratum": "attribute",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 24
+    },
+    {
+      "system": "bm25-lex",
+      "id": "h09",
+      "query": "bag",
+      "stratum": "cross-language",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 114
+    },
+    {
+      "system": "bm25-lex",
+      "id": "h10",
+      "query": "coat",
+      "stratum": "cross-language",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 156
+    },
+    {
+      "system": "bm25-lex",
+      "id": "h11",
+      "query": "lindberg",
+      "stratum": "misspelling",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 112
+    },
+    {
+      "system": "bm25-lex",
+      "id": "h12",
+      "query": "levis",
+      "stratum": "misspelling",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 27
+    },
+    {
+      "system": "bm25-lex",
+      "id": "h13",
+      "query": "damjacka",
+      "stratum": "natural language",
+      "ndcg": 1.0,
+      "precision": 1.0,
+      "returned": 20,
+      "relevant": 135
+    },
+    {
+      "system": "bm25-lex",
+      "id": "h14",
+      "query": "blå skjorta",
+      "stratum": "natural language",
+      "ndcg": 0.5725667364388258,
+      "precision": 0.9,
+      "returned": 20,
+      "relevant": 86
+    },
+    {
+      "system": "bm25-lex",
+      "id": "h15",
+      "query": "playstation",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 0
+    },
+    {
+      "system": "bm25-lex",
+      "id": "h16",
+      "query": "grästrimmer",
+      "stratum": "adversarial/absent",
+      "ndcg": 0.0,
+      "precision": 0.0,
+      "returned": 0,
+      "relevant": 0
+    }
+  ],
+  "examples": []
+}
